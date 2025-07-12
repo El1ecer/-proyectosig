@@ -3,31 +3,26 @@
 <div class="container mt-4">
     <div class="card shadow border rounded-3">
         <div class="card-header bg-primary">
-            <h3 class="mb-0 text-white">Nueva zona segura</h3>
+            <h3 class="mb-0 text-white">Nuevo punto de encuentro</h3>
         </div>
         <div class="card-body">
-            <form action="{{ route('zonasS.store') }}" method="POST" enctype="multipart/form-data" id="frmZonaS">
+            <form action="{{ route('zonasE.store') }}" method="POST" enctype="multipart/form-data" id="frmZonaE">
                 @csrf
                 <div class="row">
                     <div class="col-md-6 d-flex flex-column justify-content-between">
                         <div class="mb-3">
-                            <label for="nombre" class="form-label"><strong>Nombre de la zona:</strong></label>
-                            <input type="text" class="form-control" name="nombre" id="nombre" placeholder="Ingrese el nombre de la zona a registrar">
+                            <label for="nombre" class="form-label"><strong>Nombre del punto de encuentro:</strong></label>
+                            <input type="text" class="form-control" name="nombre" id="nombre" placeholder="Ingrese el nombre del punto de encuentro a registrar.">
                         </div>
 
                         <div class="mb-3">
-                            <label for="descripcion" class="form-label"><strong>Radio (metros):</strong></label>
-                            <input type="number" class="form-control" name="radio" id="radio" placeholder="Ingrese el radio de la zona segura">
+                            <label for="capacidad" class="form-label"><strong>Capacidad:</strong></label>
+                            <input type="number" class="form-control" name="capacidad" id="capacidad" placeholder="Ingrese la capacidad del punto de encuentro.">
                         </div>
 
                         <div class="mb-3">
-                            <label for="tipoSeguridad" class="form-label"><strong>Tipo de seguridad:</strong></label>
-                            <select class="custom-select" name="tipoSeguridad" id="tipoSeguridad">
-                                <option value="" disabled selected>Seleccione un nivel</option>
-                                <option value="Bajo">Bajo</option>
-                                <option value="Medio">Medio</option>
-                                <option value="Alto">Alto</option>
-                            </select>
+                            <label for="responsable" class="form-label"><strong>Responsable:</strong></label>
+                            <input type="text" class="form-control" name="responsable" id="responsable" placeholder="Ingrese el nombre del responsable.">
                         </div>
 
                         <div class="mb-3">
@@ -53,7 +48,7 @@
                 </div>
                 <div class="d-flex">
                     <button type="submit" class="btn btn-success">Guardar</button> &nbsp;&nbsp;&nbsp;
-                    <a href="{{ route('zonasS.index')}}" class="btn btn-secondary">Cancelar</a>
+                    <a href="{{ route('zonasE.index')}}" class="btn btn-secondary">Cancelar</a>
                 </div>
             </form>
         </div>
@@ -80,7 +75,7 @@
             position: centro,
             map: mapa,
             draggable: true,
-            title: "Centro de la zona segura"
+            title: "Punto de encuentro"
         });
 
         // Inicializa coordenadas en los inputs
@@ -94,60 +89,26 @@
             document.getElementById('longitud').value = pos.lng();
             dibujarCirculo();
         });
-
-        // Evento al escribir el radio
-        document.getElementById('radio').addEventListener('input', dibujarCirculo);
-
-        dibujarCirculo();
     }
 
-    function dibujarCirculo() {
-        // Si ya hay un círculo dibujado, lo quitamos
-        if (circulo) {
-            circulo.setMap(null);
-        }
-
-        const centro = marcador.getPosition();
-        const radio = parseFloat(document.getElementById('radio').value) || 0;
-
-        let color = "#00FF00";
-        const nivel = document.getElementById('tipoSeguridad').value;
-        if (nivel === "Bajo") color = "#FF0000";
-        else if (nivel === "Medio") color = "#FFFF00";
-
-        // Dibujar el círculo
-        circulo = new google.maps.Circle({
-            strokeColor: "#000000",
-            strokeOpacity: 0.8,
-            strokeWeight: 2,
-            fillColor: color,
-            fillOpacity: 0.35,
-            map: mapa,
-            center: centro,
-            radius: radio // en metros
-        });
-    }
-
-    // Redibujar el círculo si se cambia el tipo de seguridad
-    document.getElementById('tipoSeguridad').addEventListener('change', dibujarCirculo);
 </script>
 
 
 <script>
-    $("#frmZonaS").validate({
+    $("#frmZonaE").validate({
         rules:{
             nombre:{
                 required: true,
                 minlength: 3,
                 maxlength: 25
             },
-            radio:{
+            capacidad:{
                 required: true
             },
-            tipoSeguridad:{
+            responsable:{
                 required: true,
                 minlength: 3,
-                maxlength: 25
+                maxlength: 100
             },
             latitud:{
                 required: true
@@ -158,23 +119,23 @@
         },
         messages:{
             nombre:{
-                required: "Por favor ingrese un nombre para la zona segura.",
+                required: "Por favor ingrese un nombre para el punto de encuentro.",
                 minlength: "No puede tener menos de 3 caracteres.",
                 maxlength: "No puede tener más de 25 caracteres."
             },
             radio:{
-                required: "Por favor ingrese el radio de la zona segura.",
+                required: "Por favor ingrese la capacidad del punto de encuentro.",
             },
-            tipoSeguridad:{
-                required: "Por favor seleccione un nivel de seguridad."
+            responsable:{
+                required: "Por favor ingrese el nombre del responsable."
                 minlength: "No puede tener menos de 3 caracteres.",
-                maxlength: "No puede tener más de 25 caracteres."
+                maxlength: "No puede tener más de 100 caracteres."
             },
             latitud:{
-                required: "Por favor ingrese una latitud para la zona segura."
+                required: "Por favor ingrese una latitud para el punto de encuentro."
             },
             longitud:{
-                required: "Por favor ingrese una longitud para la zona segura."
+                required: "Por favor ingrese una longitud para el punto de encuentro."
             }
         }
     });

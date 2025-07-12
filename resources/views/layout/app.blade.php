@@ -69,7 +69,7 @@
                     <a href="/" class="nav-item nav-link">Inicio</a>
                     <a href="{{ route('zonasR.index') }}" class="nav-item nav-link">Zonas de riesgo</a>
                     <a href="{{ route('zonasS.index') }}" class="nav-item nav-link">Zonas seguras</a>
-                    <a href="#" class="nav-item nav-link">Puntos de encuentro</a>
+                    <a href="{{ route('zonasE.index') }}" class="nav-item nav-link">Puntos de encuentro</a>
                 </div>
                 <a href="" class="btn btn-primary py-2 px-4 d-none d-lg-block">Inicia sesión</a>
             </div>

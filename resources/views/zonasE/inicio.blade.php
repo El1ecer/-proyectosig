@@ -2,18 +2,18 @@
 @section('contenido')
 <br>
 <div class="container-fluid text-right">
-    <a href="{{ route('zonasS.create') }}" class="btn btn-success">Nueva zona segura</a>
+    <a href="{{ route('zonasE.create') }}" class="btn btn-primary">Nuevo punto de encuentro</a>
 </div>
 <div class="container-fluid mt-4 overflow-hidden">
     @if($zonas->isNotEmpty())
     <div class="table-responsive">
-        <table class="table table-hover shadow rounded-2 w-100" id="tblZonaS">
+        <table class="table table-hover shadow rounded-2 w-100" id="tblZonaE">
             <thead class="bg-primary text-white">
                 <tr>
                     <th>#</th>
                     <th>Nombre</th>
-                    <th>Radio (metros)</th>
-                    <th>Tipo de seguridad</th>
+                    <th>Capaciad</th>
+                    <th>Responsable</th>
                     <th>Coordenadas</th>
                     <th>Acciones</th>
                 </tr>
@@ -23,8 +23,8 @@
                 <tr>
                     <td>{{ $index + 1 }}</td>   
                     <td>{{ $zona->nombre }}</td>
-                    <td>{{ $zona->radio }}</td>
-                    <td>{{ $zona->tipoSeguridad }}</td>
+                    <td>{{ $zona->capacidad }}</td>
+                    <td>{{ $zona->responsable }}</td>
                     <td>
                         <div>
                             <h5 style="color: #2878EB">Latitud:</h5>
@@ -35,12 +35,12 @@
                     </td>
                     <td class="text-center">
                         <div>
-                            <a href="{{ route('zonasS.edit', $zona->id) }}" class="btn btn-sm btn-warning btn-pencil">
+                            <a href="{{ route('zonasE.edit', $zona->id) }}" class="btn btn-sm btn-warning btn-pencil">
                                 <i class="fa-solid fa-pen-to-square"></i>
                             </a>
                         </div><br>
                         <div>
-                            <form class="form-eliminar" action="{{ route('zonasS.destroy', $zona->id) }}" method="POST" class="d-inline">
+                            <form class="form-eliminar" action="{{ route('zonasE.destroy', $zona->id) }}" method="POST" class="d-inline">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-danger"><i class="fa-solid fa-trash"></i></button>
@@ -53,7 +53,7 @@
         </table>
     </div>
     @else
-        <p class="text-muted">No hay zonas seguras registradas.</p>
+        <p class="text-muted">No hay puntos de encuentro.</p>
     @endif
 </div>
 <br>
@@ -64,7 +64,7 @@
             e.preventDefault(); //Detiene el envio para hacer la confirmacion
 
             //Se esta sacando el nombre del registro a eliminar, si no lo encuentra lo deja como "esta zona"
-            const zonaNombre = this.closest('tr')?.querySelector('td:nth-child(2)')?.innerText ?? 'esta zona';
+            const zonaNombre = this.closest('tr')?.querySelector('td:nth-child(2)')?.innerText ?? 'este punto de encuentro';
 
             Swal.fire({
                 title: '¿Estás seguro?',

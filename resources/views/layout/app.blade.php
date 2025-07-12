@@ -33,6 +33,10 @@
     <!-- jQuery Validate -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.21.0/jquery.validate.min.js" integrity="sha512-KFHXdr2oObHKI9w4Hv1XPKc898mE4kgYx58oqsc/JqqdLMDI4YjOLzom+EMlW8HFUd0QfjfAvxSL6sEq/a42fQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
+    <!-- SweetAlert2 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.22.2/sweetalert2.all.min.js" integrity="sha512-rBcqrtFFt2PxFGp3ffb/lECz3pYr2DoF1FWmnMLy6qVdAOnaQg2C4wK84m64K36aK0qxkImFrlb/AKgOoeTvSg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.22.2/sweetalert2.min.css" integrity="sha512-bkb9OVJFbnXaSi8PvT9arbq1WSE9QCDkLse1RqPlhnRqmH16CgmL9HAd0W99NYfVIp66gZb4k+L1jOr+JuT8Og==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
 
     <style>
         .error{
@@ -74,6 +78,18 @@
     <!-- Navbar End -->
 
     @yield('contenido')
+
+    @if(session('mensaje'))
+    <script>
+        Swal.fire({
+            title: '¡Éxito!',
+            text: "{{ session('mensaje') }}",
+            icon: 'success',
+            timer: 3000,
+            showConfirmButton: true
+        });
+    </script>
+    @endif
 
 
     <!-- Footer Start -->

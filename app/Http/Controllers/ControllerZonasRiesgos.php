@@ -48,7 +48,7 @@ class ControllerZonasRiesgos extends Controller
             'longitud5' => $request->longitud5
         ];
         ZonasRiesgo::create($datos);
-        return redirect()->route('zonasR.index');
+        return redirect()->route('zonasR.index')->with('mensaje', 'Zona creada correctamente.');
     }
 
     /**
@@ -91,7 +91,7 @@ class ControllerZonasRiesgos extends Controller
             'latitud5' => $request->latitud5,
             'longitud5' => $request->longitud5
         ]);
-        return redirect()->route('zonasR.index');
+        return redirect()->route('zonasR.index')->with('mensaje', 'Zona actualizada correctamente.');
     }
 
     /**
@@ -103,6 +103,6 @@ class ControllerZonasRiesgos extends Controller
         $zona = ZonasRiesgo::findOrFail($id);
         $zona->delete();
 
-        return redirect()->route('zonasR.index');
+        return redirect()->route('zonasR.index')->with('mensaje', 'Zona eliminada correctamente.');
     }
 }

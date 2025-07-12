@@ -73,7 +73,7 @@
                         <a href="{{ route('zonasR.edit', $zona->id) }}" class="btn btn-sm btn-warning btn-pencil">
                             <i class="fa-solid fa-pen-to-square"></i>
                         </a>
-                        <form action="{{ route('zonasR.destroy', $zona->id) }}" method="POST" class="d-inline">
+                        <form class="form-eliminar" action="{{ route('zonasR.destroy', $zona->id) }}" method="POST" class="d-inline">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="btn btn-sm btn-danger"><i class="fa-solid fa-trash"></i></button>
@@ -89,4 +89,30 @@
     @endif
 </div>
 <br>
+
+<script>
+    document.querySelectorAll('.form-eliminar').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault(); // Evita que se envíe el formulario inmediatamente
+
+            // Aquí podrías identificar algo del `target`, por ejemplo, el nombre de la zona
+            const zonaNombre = this.closest('tr')?.querySelector('td:nth-child(2)')?.innerText ?? 'esta zona';
+
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: `Vas a eliminar ${zonaNombre}. Esta acción no se puede deshacer.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    this.submit(); // Ahora sí se envía el formulario
+                }
+            });
+        });
+    });
+</script>
+
 @endsection

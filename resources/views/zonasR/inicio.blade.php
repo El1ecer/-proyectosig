@@ -70,7 +70,7 @@
                         </div>
                     </td>
                     <td>
-                        <a href="#" class="btn btn-sm btn-warning btn-pencil">
+                        <a href="{{ route('zonasR.edit', $zona->id) }}" class="btn btn-sm btn-warning btn-pencil">
                             <i class="fa-solid fa-pen-to-square"></i>
                         </a>
                         <form action="{{ route('zonasR.destroy', $zona->id) }}" method="POST" class="d-inline">

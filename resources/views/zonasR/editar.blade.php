@@ -3,37 +3,32 @@
 <div class="container mt-4">
     <div class="card shadow border rounded-3">
         <div class="card-header bg-primary">
-            <h3 class="mb-0 text-white">Nueva zona de riesgo</h3>
+            <h3 class="mb-0 text-white">Editar la zona de riesgo</h3>
         </div>
         <div class="card-body">
-            <form action="{{ route('zonasR.store') }}" method="POST" enctype="multipart/form-data" id="frmZonaR">
+            <form action="{{ route('zonasR.update', $zona->id) }}" method="POST" enctype="multipart/form-data" id="frmZonaR">
                 @csrf
+                @method('PUT')
                 <div class="row">
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label for="nombre" class="form-label"><strong>Nombre de la zona:</strong></label>
-                            <input type="text" class="form-control" name="nombre" id="nombre" placeholder="Ingrese el nombre de la zona a registrar">
+                            <input type="text" class="form-control" value="{{ $zona->nombre }}" name="nombre" id="nombre" placeholder="Ingrese el nombre de la zona a registrar">
                         </div>
 
                         <div class="mb-3">
                             <label for="descripcion" class="form-label"><strong>Descripción:</strong></label>
-                            <textarea class="form-control" name="descripcion" id="descripcion" placeholder="De una breve descripción de la zona" rows="4"></textarea>
+                            <textarea class="form-control" name="descripcion" id="descripcion" placeholder="De una breve descripción de la zona" rows="4">{{ $zona->descripcion }}</textarea>
                         </div>
 
                         <div class="mb-3">
                             <label for="nivelRiesgo" class="form-label"><strong>Nivel de riesgo:</strong></label>
                             <select class="custom-select" name="nivelRiesgo" id="nivelRiesgo">
-                                <option value="" disabled selected>Seleccione un nivel</option>
-                                <option value="Bajo">Bajo</option>
-                                <option value="Medio">Medio</option>
-                                <option value="Alto">Alto</option>
+                                <option value="Bajo" {{ $zona->nivelRiesgo == 'Bajo' ? 'selected' : '' }}>Bajo</option>
+                                <option value="Medio" {{ $zona->nivelRiesgo == 'Medio' ? 'selected' : '' }}>Medio</option>
+                                <option value="Alto" {{ $zona->nivelRiesgo == 'Alto' ? 'selected' : '' }}>Alto</option>
                             </select>
                         </div>
-                        
-                        
-                        
-                        
-                        
                     </div>
                     <div class="col-md-6">
                         <div class="mb-4">
@@ -49,11 +44,11 @@
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="latitud" class="form-label"><strong>Latitud:</strong></label>
-                                    <input type="text" class="form-control" name="latitud1" id="latitud1" readonly>
+                                    <input type="text" value="{{ $zona->latitud1 }}" class="form-control" name="latitud1" id="latitud1" readonly>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="longitud" class="form-label"><strong>Longitud:</strong></label>
-                                    <input type="text" class="form-control" name="longitud1" id="longitud1" readonly>
+                                    <input type="text" value="{{ $zona->longitud1 }}" class="form-control" name="longitud1" id="longitud1" readonly>
                                 </div>
                             </div>
                         </div>
@@ -64,11 +59,11 @@
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="latitud" class="form-label"><strong>Latitud:</strong></label>
-                                    <input type="text" class="form-control" name="latitud2" id="latitud2" readonly>
+                                    <input type="text" value="{{ $zona->latitud2 }}" class="form-control" name="latitud2" id="latitud2" readonly>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="longitud" class="form-label"><strong>Longitud:</strong></label>
-                                    <input type="text" class="form-control" name="longitud2" id="longitud2" readonly>
+                                    <input type="text" value="{{ $zona->longitud2 }}" class="form-control" name="longitud2" id="longitud2" readonly>
                                 </div>
                             </div>
                         </div>
@@ -79,11 +74,11 @@
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="latitud" class="form-label"><strong>Latitud:</strong></label>
-                                    <input type="text" class="form-control" name="latitud3" id="latitud3" readonly>
+                                    <input type="text" value="{{ $zona->latitud3 }}" class="form-control" name="latitud3" id="latitud3" readonly>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="longitud" class="form-label"><strong>Longitud:</strong></label>
-                                    <input type="text" class="form-control" name="longitud3" id="longitud3" readonly>
+                                    <input type="text" value="{{ $zona->longitud3 }}" class="form-control" name="longitud3" id="longitud3" readonly>
                                 </div>
                             </div>
                         </div>
@@ -94,11 +89,11 @@
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="latitud" class="form-label"><strong>Latitud:</strong></label>
-                                    <input type="text" class="form-control" name="latitud4" id="latitud4" readonly>
+                                    <input type="text" value="{{ $zona->latitud4 }}" class="form-control" name="latitud4" id="latitud4" readonly>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="longitud" class="form-label"><strong>Longitud:</strong></label>
-                                    <input type="text" class="form-control" name="longitud4" id="longitud4" readonly>
+                                    <input type="text" value="{{ $zona->longitud4 }}" class="form-control" name="longitud4" id="longitud4" readonly>
                                 </div>
                             </div>
                         </div>
@@ -109,11 +104,11 @@
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="latitud" class="form-label"><strong>Latitud:</strong></label>
-                                    <input type="text" class="form-control" name="latitud5" id="latitud5" readonly>
+                                    <input type="text" value="{{ $zona->latitud5 }}" class="form-control" name="latitud5" id="latitud5" readonly>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="longitud" class="form-label"><strong>Longitud:</strong></label>
-                                    <input type="text" class="form-control" name="longitud5" id="longitud5" readonly>
+                                    <input type="text" value="{{ $zona->longitud5 }}" class="form-control" name="longitud5" id="longitud5" readonly>
                                 </div>
                             </div>
                         </div>
@@ -129,7 +124,15 @@
     </div>
 </div>
 
-
+<script>
+    const coordenadasZona = [
+        { lat: parseFloat("{{ $zona->latitud1 }}"), lng: parseFloat("{{ $zona->longitud1 }}") },
+        { lat: parseFloat("{{ $zona->latitud2 }}"), lng: parseFloat("{{ $zona->longitud2 }}") },
+        { lat: parseFloat("{{ $zona->latitud3 }}"), lng: parseFloat("{{ $zona->longitud3 }}") },
+        { lat: parseFloat("{{ $zona->latitud4 }}"), lng: parseFloat("{{ $zona->longitud4 }}") },
+        { lat: parseFloat("{{ $zona->latitud5 }}"), lng: parseFloat("{{ $zona->longitud5 }}") },
+    ];
+</script>
 
 <script>
     
@@ -138,16 +141,16 @@
     let poligono;
 
     function initMap() {
-        const centro = { lat: -0.9374805, lng: -78.6161327 };
+        const centro = coordenadasZona[0];
         mapaPoligono = new google.maps.Map(document.getElementById('mapaZona'), {
             zoom: 15,
             center: centro,
             mapTypeId: google.maps.MapTypeId.ROADMAP
         });
 
-        for (let i = 0; i < 5; i++) {
+        coordenadasZona.forEach((coord, i) => {
             const marcador = new google.maps.Marker({
-                position: centro,
+                position: coord,
                 map: mapaPoligono,
                 draggable: true,
                 title: `Punto ${i + 1}`
@@ -161,7 +164,7 @@
             });
 
             marcadores.push(marcador);
-        }
+        });
 
         dibujarPoligono();
     }

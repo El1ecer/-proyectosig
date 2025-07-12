@@ -64,7 +64,9 @@ class ControllerZonasRiesgos extends Controller
      */
     public function edit(string $id)
     {
-        //
+        //Vista para editar
+        $zona = ZonasRiesgo::findOrFail($id);
+        return view('zonasR.editar', compact('zona'));
     }
 
     /**
@@ -72,7 +74,24 @@ class ControllerZonasRiesgos extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        //Actualizar los datos que mandamos para editar
+        $zona = ZonasRiesgo::findOrFail($id);
+        $zona->update([
+            'nombre' => $request->nombre,
+            'descripcion' => $request->descripcion,
+            'nivelRiesgo' => $request->nivelRiesgo,
+            'latitud1' => $request->latitud1,
+            'longitud1' => $request->longitud1,
+            'latitud2' => $request->latitud2,
+            'longitud2' => $request->longitud2,
+            'latitud3' => $request->latitud3,
+            'longitud3' => $request->longitud3,
+            'latitud4' => $request->latitud4,
+            'longitud4' => $request->longitud4,
+            'latitud5' => $request->latitud5,
+            'longitud5' => $request->longitud5
+        ]);
+        return redirect()->route('zonasR.index');
     }
 
     /**

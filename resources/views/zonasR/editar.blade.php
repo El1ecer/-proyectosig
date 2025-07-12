@@ -10,7 +10,7 @@
                 @csrf
                 @method('PUT')
                 <div class="row">
-                    <div class="col-md-6">
+                    <div class="col-md-6 d-flex flex-column justify-content-between">
                         <div class="mb-3">
                             <label for="nombre" class="form-label"><strong>Nombre de la zona:</strong></label>
                             <input type="text" class="form-control" value="{{ $zona->nombre }}" name="nombre" id="nombre" placeholder="Ingrese el nombre de la zona a registrar">
@@ -31,12 +31,12 @@
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="mb-4">
+                        <div class="mb-4 h-100">
                             <label class="form-label"><strong>Seleccione la ubicación en el mapa:</strong></label>
-                            <div id="mapaZona" style="border:1px solid #ccc; height:300px; width:100%; border-radius: 8px;"></div>
+                            <div id="mapaZona" style="border:1px solid #ccc; height:100%; width:100%; border-radius: 8px;"></div>
                         </div>
                     </div>
-                </div>
+                </div><br><br>
                 <div class="row">
                     <div class="col-md-4">
                         <div class="mb-3">

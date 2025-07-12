@@ -2,23 +2,19 @@
 @section('contenido')
 <br>
 <div class="container-fluid text-right">
-    <a href="{{ route('zonasR.create') }}" class="btn btn-danger">Nueva zona de riesgo</a>
+    <a href="{{ route('zonasS.create') }}" class="btn btn-success">Nueva zona segura</a>
 </div>
 <div class="container-fluid mt-4 overflow-hidden">
     @if($zonas->isNotEmpty())
     <div class="table-responsive">
-        <table class="table table-hover shadow rounded-2 w-100" id="tblZonaR">
+        <table class="table table-hover shadow rounded-2 w-100" id="tblZonaS">
             <thead class="bg-primary text-white">
                 <tr>
                     <th>#</th>
                     <th>Nombre</th>
-                    <th>Descripción</th>
-                    <th>Nivel de riesgo</th>
-                    <th>Coord 1</th>
-                    <th>Coord 2</th>
-                    <th>Coord 3</th>
-                    <th>Coord 4</th>
-                    <th>Coord 5</th>
+                    <th>Radio</th>
+                    <th>Tipo de seguridad</th>
+                    <th>Coordenadas</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
@@ -27,56 +23,24 @@
                 <tr>
                     <td>{{ $index + 1 }}</td>   
                     <td>{{ $zona->nombre }}</td>
-                    <td>{{ Str::limit($zona->descripcion, 50) }}</td>
-                    <td>{{ $zona->nivelRiesgo }}</td>
+                    <td>{{ $zona->radio }}</td>
+                    <td>{{ $zona->tipoSeguridad }}</td>
                     <td>
                         <div>
                             <h5 style="color: #2878EB">Latitud:</h5>
-                            {{ $zona->latitud1 }}
+                            {{ $zona->latitud }}
                             <h5 style="color: #2878EB">Longitud:</h5>
-                            {{ $zona->longitud1 }}
-                        </div>
-                    </td>
-                    <td>
-                        <div>
-                            <h5 style="color: #2878EB">Latitud:</h5>
-                            {{ $zona->latitud2 }}
-                            <h5 style="color: #2878EB">Longitud:</h5>
-                            {{ $zona->longitud2 }}
-                        </div>
-                    </td>
-                    <td>
-                        <div>
-                            <h5 style="color: #2878EB">Latitud:</h5>
-                            {{ $zona->latitud3 }}
-                            <h5 style="color: #2878EB">Longitud:</h5>
-                            {{ $zona->longitud3 }}
-                        </div>
-                    </td>
-                    <td>
-                        <div>
-                            <h5 style="color: #2878EB">Latitud:</h5>
-                            {{ $zona->latitud4 }}
-                            <h5 style="color: #2878EB">Longitud:</h5>
-                            {{ $zona->longitud4 }}
-                        </div>
-                    </td>
-                    <td>
-                        <div>
-                            <h5 style="color: #2878EB">Latitud:</h5>
-                            {{ $zona->latitud5 }}
-                            <h5 style="color: #2878EB">Longitud:</h5>
-                            {{ $zona->longitud5 }}
+                            {{ $zona->longitud }}
                         </div>
                     </td>
                     <td class="text-center">
                         <div>
-                            <a href="{{ route('zonasR.edit', $zona->id) }}" class="btn btn-sm btn-warning btn-pencil">
+                            <a href="{{ route('zonasS.edit', $zona->id) }}" class="btn btn-sm btn-warning btn-pencil">
                                 <i class="fa-solid fa-pen-to-square"></i>
                             </a>
                         </div><br>
                         <div>
-                            <form class="form-eliminar" action="{{ route('zonasR.destroy', $zona->id) }}" method="POST" class="d-inline">
+                            <form class="form-eliminar" action="{{ route('zonasS.destroy', $zona->id) }}" method="POST" class="d-inline">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-danger"><i class="fa-solid fa-trash"></i></button>
@@ -89,7 +53,7 @@
         </table>
     </div>
     @else
-        <p class="text-muted">No hay zonas de riesgo registradas.</p>
+        <p class="text-muted">No hay zonas seguras registradas.</p>
     @endif
 </div>
 <br>

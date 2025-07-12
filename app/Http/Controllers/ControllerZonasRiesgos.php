@@ -32,23 +32,28 @@ class ControllerZonasRiesgos extends Controller
     public function store(Request $request)
     {
         //Guardar los datos en la bdd
-        $datos = [
-            'nombre' => $request->nombre,
-            'descripcion' => $request->descripcion,
-            'nivelRiesgo' => $request->nivelRiesgo,
-            'latitud1' => $request->latitud1,
-            'longitud1' => $request->longitud1,
-            'latitud2' => $request->latitud2,
-            'longitud2' => $request->longitud2,
-            'latitud3' => $request->latitud3,
-            'longitud3' => $request->longitud3,
-            'latitud4' => $request->latitud4,
-            'longitud4' => $request->longitud4,
-            'latitud5' => $request->latitud5,
-            'longitud5' => $request->longitud5
-        ];
-        ZonasRiesgo::create($datos);
-        return redirect()->route('zonasR.index')->with('mensaje', 'Zona creada correctamente.');
+        try{
+            $datos = [
+                'nombre' => $request->nombre,
+                'descripcion' => $request->descripcion,
+                'nivelRiesgo' => $request->nivelRiesgo,
+                'latitud1' => $request->latitud1,
+                'longitud1' => $request->longitud1,
+                'latitud2' => $request->latitud2,
+                'longitud2' => $request->longitud2,
+                'latitud3' => $request->latitud3,
+                'longitud3' => $request->longitud3,
+                'latitud4' => $request->latitud4,
+                'longitud4' => $request->longitud4,
+                'latitud5' => $request->latitud5,
+                'longitud5' => $request->longitud5
+            ];
+            ZonasRiesgo::create($datos);
+            return redirect()->route('zonasR.index')->with('mensaje', 'Zona creada correctamente.');
+        }
+        catch (\Exception $e){
+            return redirect()->back()->with('error', 'Hubo un error al guardar la zona de riesgo: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -75,23 +80,29 @@ class ControllerZonasRiesgos extends Controller
     public function update(Request $request, string $id)
     {
         //Actualizar los datos que mandamos para editar
-        $zona = ZonasRiesgo::findOrFail($id);
-        $zona->update([
-            'nombre' => $request->nombre,
-            'descripcion' => $request->descripcion,
-            'nivelRiesgo' => $request->nivelRiesgo,
-            'latitud1' => $request->latitud1,
-            'longitud1' => $request->longitud1,
-            'latitud2' => $request->latitud2,
-            'longitud2' => $request->longitud2,
-            'latitud3' => $request->latitud3,
-            'longitud3' => $request->longitud3,
-            'latitud4' => $request->latitud4,
-            'longitud4' => $request->longitud4,
-            'latitud5' => $request->latitud5,
-            'longitud5' => $request->longitud5
-        ]);
-        return redirect()->route('zonasR.index')->with('mensaje', 'Zona actualizada correctamente.');
+        try{
+            $zona = ZonasRiesgo::findOrFail($id);
+            $zona->update([
+                'nombre' => $request->nombre,
+                'descripcion' => $request->descripcion,
+                'nivelRiesgo' => $request->nivelRiesgo,
+                'latitud1' => $request->latitud1,
+                'longitud1' => $request->longitud1,
+                'latitud2' => $request->latitud2,
+                'longitud2' => $request->longitud2,
+                'latitud3' => $request->latitud3,
+                'longitud3' => $request->longitud3,
+                'latitud4' => $request->latitud4,
+                'longitud4' => $request->longitud4,
+                'latitud5' => $request->latitud5,
+                'longitud5' => $request->longitud5
+            ]);
+            return redirect()->route('zonasR.index')->with('mensaje', 'Zona actualizada correctamente.');
+        }
+        catch (\Exception $e){
+            return redirect()->back()->with('error', 'Hubo un error al actualizar la zona de riesgo: ' . $e->getMessage());
+        }
+        
     }
 
     /**
@@ -100,9 +111,15 @@ class ControllerZonasRiesgos extends Controller
     public function destroy(string $id)
     {
         //Eliminar
-        $zona = ZonasRiesgo::findOrFail($id);
-        $zona->delete();
+        try{
+            $zona = ZonasRiesgo::findOrFail($id);
+            $zona->delete();
 
-        return redirect()->route('zonasR.index')->with('mensaje', 'Zona eliminada correctamente.');
+            return redirect()->route('zonasR.index')->with('mensaje', 'Zona eliminada correctamente.');
+        }
+        catch (\Exception $e){
+            return redirect()->back()->with('error', 'Hubo un error al eliminar la zona de riesgo: ' . $e->getMessage());
+        }
+        
     }
 }

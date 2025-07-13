@@ -66,12 +66,42 @@
             </button>
             <div class="collapse navbar-collapse justify-content-between px-lg-3" id="navbarCollapse">
                 <div class="navbar-nav mx-auto py-0">
-                    <a href="/" class="nav-item nav-link">Inicio</a>
-                    <a href="{{ route('zonasR.index') }}" class="nav-item nav-link">Zonas de riesgo</a>
-                    <a href="{{ route('zonasS.index') }}" class="nav-item nav-link">Zonas seguras</a>
-                    <a href="{{ route('zonasE.index') }}" class="nav-item nav-link">Puntos de encuentro</a>
+                    @if(session('tipo') == 'Administrador')
+                        <a href="/" class="nav-item nav-link">Inicio</a>
+                        <div class="nav-item dropdown">
+                            <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">Zonas de riesgo</a>
+                            <div class="dropdown-menu m-0">
+                                <a href="{{ route('zonasR.index') }}" class="dropdown-item">Administración</a>
+                                <a href="{{ route('zonasR.mapa') }}" class="dropdown-item">Mapa</a>
+                            </div>
+                        </div>
+                        <div class="nav-item dropdown">
+                            <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">Zonas seguras</a>
+                            <div class="dropdown-menu m-0">
+                                <a href="{{ route('zonasS.index') }}" class="dropdown-item">Administración</a>
+                                <a href="{{ route('zonasS.mapa') }}" class="dropdown-item">Mapa</a>
+                            </div>
+                        </div>
+                        <div class="nav-item dropdown">
+                            <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">Puntos de encuentro</a>
+                            <div class="dropdown-menu m-0">
+                                <a href="{{ route('zonasE.index') }}" class="dropdown-item">Administración</a>
+                                <a href="{{ route('zonasE.mapa') }}" class="dropdown-item">Mapa</a>
+                            </div>
+                        </div>
+                        <a href="{{ route('inicioS.lista') }}" class="nav-item nav-link">Usuarios</a>
+                    @else
+                        <a href="/" class="nav-item nav-link">Inicio</a>
+                        <a href="{{ route('zonasR.mapa') }}" class="nav-item nav-link">Zonas de riesgo</a>
+                        <a href="{{ route('zonasS.mapa') }}" class="nav-item nav-link">Zonas seguras</a>
+                        <a href="{{ route('zonasE.mapa') }}" class="nav-item nav-link">Puntos de encuentro</a>
+                    @endif
                 </div>
-                <a href="" class="btn btn-primary py-2 px-4 d-none d-lg-block">Inicia sesión</a>
+                @if(session('tipo') == 'Invitado')
+                    <a href="{{ route('inicioS.index') }}" class="btn btn-primary py-2 px-4 d-lg-block w-lg-auto">Inicia sesión</a>
+                @else
+                    <a href="{{ route('inicioS.logout') }}" class="btn btn-primary py-2 px-4 d-lg-block w-lg-auto">Cerrar sesión</a>
+                @endif
             </div>
         </nav>
     </div>

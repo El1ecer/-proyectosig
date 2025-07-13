@@ -12,9 +12,17 @@ class ControllerZonasEncuentros extends Controller
      */
     public function index()
     {
+        if (session('tipo') !== 'Administrador') {
+            return redirect('/')->with('error', 'Acceso no autorizado.');
+        }
         //Pagina principal
         $zonas=ZonasEncuentro::all();
         return view('zonasE.inicio', compact('zonas'));
+    }
+
+    public function mapa(){
+        //Pagina principal
+        return view('zonasE.mapa');
     }
 
     /**
@@ -22,6 +30,9 @@ class ControllerZonasEncuentros extends Controller
      */
     public function create()
     {
+        if (session('tipo') !== 'Administrador') {
+            return redirect('/')->with('error', 'Acceso no autorizado.');
+        }
         //Vista para guardar datos
         return view('zonasE.nuevaZona');
     }
@@ -31,6 +42,9 @@ class ControllerZonasEncuentros extends Controller
      */
     public function store(Request $request)
     {
+        if (session('tipo') !== 'Administrador') {
+            return redirect('/')->with('error', 'Acceso no autorizado.');
+        }
         //Guardar los datos en la bdd
         try {
             $datos = [
@@ -62,6 +76,9 @@ class ControllerZonasEncuentros extends Controller
      */
     public function edit(string $id)
     {
+        if (session('tipo') !== 'Administrador') {
+            return redirect('/')->with('error', 'Acceso no autorizado.');
+        }
         //Vista para editar
         $zona = ZonasEncuentro::findOrFail($id);
         return view('zonasE.editar', compact('zona'));
@@ -72,6 +89,9 @@ class ControllerZonasEncuentros extends Controller
      */
     public function update(Request $request, string $id)
     {
+        if (session('tipo') !== 'Administrador') {
+            return redirect('/')->with('error', 'Acceso no autorizado.');
+        }
         //Actualizar los datos que mandamos para editar
         try{
             $zona = ZonasEncuentro::findOrFail($id);
@@ -94,6 +114,9 @@ class ControllerZonasEncuentros extends Controller
      */
     public function destroy(string $id)
     {
+        if (session('tipo') !== 'Administrador') {
+            return redirect('/')->with('error', 'Acceso no autorizado.');
+        }
         //Eliminar
         try{
             $zona = ZonasEncuentro::findOrFail($id);

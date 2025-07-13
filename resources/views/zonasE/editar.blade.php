@@ -103,7 +103,9 @@
                 maxlength: 25
             },
             capacidad:{
-                required: true
+                required: true,
+                min: 50,
+                max: 1000
             },
             responsable:{
                 required: true,
@@ -123,11 +125,13 @@
                 minlength: "No puede tener menos de 3 caracteres.",
                 maxlength: "No puede tener más de 25 caracteres."
             },
-            radio:{
+            capacidad:{
                 required: "Por favor ingrese la capacidad del punto de encuentro.",
+                min: "Ningun punto de encuentro tiene menos capacidad de 50 personas.",
+                max: "Ningun punto de encuentro tiene mas de 1000 personas de capacidad.",
             },
             responsable:{
-                required: "Por favor ingrese el nombre del responsable."
+                required: "Por favor ingrese el nombre del responsable.",
                 minlength: "No puede tener menos de 3 caracteres.",
                 maxlength: "No puede tener más de 100 caracteres."
             },

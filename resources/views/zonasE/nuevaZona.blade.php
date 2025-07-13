@@ -11,7 +11,7 @@
                 <div class="row">
                     <div class="col-md-6 d-flex flex-column justify-content-between">
                         <div class="mb-3">
-                            <label for="nombre" class="form-label"><strong>Nombre del punto de encuentro:</strong></label>
+                            <label for="nombrep" class="form-label"><strong>Nombre del punto de encuentro:</strong></label>
                             <input type="text" class="form-control" name="nombre" id="nombre" placeholder="Ingrese el nombre del punto de encuentro a registrar.">
                         </div>
 
@@ -87,7 +87,6 @@
             const pos = this.getPosition();
             document.getElementById('latitud').value = pos.lat();
             document.getElementById('longitud').value = pos.lng();
-            dibujarCirculo();
         });
     }
 
@@ -103,7 +102,9 @@
                 maxlength: 25
             },
             capacidad:{
-                required: true
+                required: true,
+                min: 50,
+                max: 1000
             },
             responsable:{
                 required: true,
@@ -123,11 +124,13 @@
                 minlength: "No puede tener menos de 3 caracteres.",
                 maxlength: "No puede tener más de 25 caracteres."
             },
-            radio:{
+            capacidad:{
                 required: "Por favor ingrese la capacidad del punto de encuentro.",
+                min: "Ningun punto de encuentro tiene menos capacidad de 50 personas.",
+                max: "Ningun punto de encuentro tiene mas de 1000 personas de capacidad.",
             },
             responsable:{
-                required: "Por favor ingrese el nombre del responsable."
+                required: "Por favor ingrese el nombre del responsable.",
                 minlength: "No puede tener menos de 3 caracteres.",
                 maxlength: "No puede tener más de 100 caracteres."
             },

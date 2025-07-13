@@ -2,59 +2,63 @@
 @section('contenido')
 <br>
 <div class="container-fluid text-right">
-    <a href="{{ route('zonasE.create') }}" class="btn btn-primary">Nuevo punto de encuentro</a>
+    <div class="py-3 py-lg-0 px-lg-5">
+        <a href="{{ route('zonasE.create') }}" class="btn btn-primary">Nuevo punto de encuentro</a>
+    </div>
 </div>
 <div class="container-fluid mt-4 overflow-hidden">
-    @if($zonas->isNotEmpty())
-    <div class="table-responsive">
-        <table class="table table-hover shadow rounded-2 w-100" id="tblZonaE">
-            <thead class="bg-primary text-white">
-                <tr>
-                    <th>#</th>
-                    <th>Nombre</th>
-                    <th>Capaciad</th>
-                    <th>Responsable</th>
-                    <th>Coordenadas</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody class="table-bordered">
-                @foreach($zonas as $index => $zona)
-                <tr>
-                    <td>{{ $index + 1 }}</td>   
-                    <td>{{ $zona->nombre }}</td>
-                    <td>{{ $zona->capacidad }}</td>
-                    <td>{{ $zona->responsable }}</td>
-                    <td>
-                        <div>
-                            <h5 style="color: #2878EB">Latitud:</h5>
-                            {{ $zona->latitud }}
-                            <h5 style="color: #2878EB">Longitud:</h5>
-                            {{ $zona->longitud }}
-                        </div>
-                    </td>
-                    <td class="text-center">
-                        <div>
-                            <a href="{{ route('zonasE.edit', $zona->id) }}" class="btn btn-sm btn-warning btn-pencil">
-                                <i class="fa-solid fa-pen-to-square"></i>
-                            </a>
-                        </div><br>
-                        <div>
-                            <form class="form-eliminar" action="{{ route('zonasE.destroy', $zona->id) }}" method="POST" class="d-inline">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-danger"><i class="fa-solid fa-trash"></i></button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
+    <div class="py-3 py-lg-0 px-lg-5">
+        @if($zonas->isNotEmpty())
+        <div class="table-responsive">
+            <table class="table table-hover shadow rounded-2 w-100" id="tblZonaE">
+                <thead class="bg-primary text-white">
+                    <tr>
+                        <th>#</th>
+                        <th>Nombre</th>
+                        <th>Capaciad</th>
+                        <th>Responsable</th>
+                        <th>Coordenadas</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="table-bordered">
+                    @foreach($zonas as $index => $zona)
+                    <tr>
+                        <td>{{ $index + 1 }}</td>   
+                        <td>{{ $zona->nombre }}</td>
+                        <td>{{ $zona->capacidad }}</td>
+                        <td>{{ $zona->responsable }}</td>
+                        <td>
+                            <div>
+                                <h5 style="color: #2878EB">Latitud:</h5>
+                                {{ $zona->latitud }}
+                                <h5 style="color: #2878EB">Longitud:</h5>
+                                {{ $zona->longitud }}
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <div>
+                                <a href="{{ route('zonasE.edit', $zona->id) }}" class="btn btn-sm btn-warning btn-pencil">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
+                            </div><br>
+                            <div>
+                                <form class="form-eliminar" action="{{ route('zonasE.destroy', $zona->id) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-danger"><i class="fa-solid fa-trash"></i></button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        @else
+            <p class="text-muted">No hay puntos de encuentro.</p>
+        @endif
     </div>
-    @else
-        <p class="text-muted">No hay puntos de encuentro.</p>
-    @endif
 </div>
 <br>
 

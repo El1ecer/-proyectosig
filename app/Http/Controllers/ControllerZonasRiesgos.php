@@ -12,9 +12,17 @@ class ControllerZonasRiesgos extends Controller
      */
     public function index()
     {
+        if (session('tipo') !== 'Administrador') {
+            return redirect('/')->with('error', 'Acceso no autorizado.');
+        }
         //Pagina principal
         $zonas=ZonasRiesgo::all();
         return view('zonasR.inicio', compact('zonas'));
+    }
+
+    public function mapa(){
+        //Pagina principal
+        return view('zonasR.mapa');
     }
 
     /**
@@ -22,6 +30,9 @@ class ControllerZonasRiesgos extends Controller
      */
     public function create()
     {
+        if (session('tipo') !== 'Administrador') {
+            return redirect('/')->with('error', 'Acceso no autorizado.');
+        }
         //Vista para crear nuevo punto de riesgo
         return view('zonasR.nuevaZona');
     }
@@ -31,6 +42,9 @@ class ControllerZonasRiesgos extends Controller
      */
     public function store(Request $request)
     {
+        if (session('tipo') !== 'Administrador') {
+            return redirect('/')->with('error', 'Acceso no autorizado.');
+        }
         //Guardar los datos en la bdd
         try{
             $datos = [
@@ -69,6 +83,9 @@ class ControllerZonasRiesgos extends Controller
      */
     public function edit(string $id)
     {
+        if (session('tipo') !== 'Administrador') {
+            return redirect('/')->with('error', 'Acceso no autorizado.');
+        }
         //Vista para editar
         $zona = ZonasRiesgo::findOrFail($id);
         return view('zonasR.editar', compact('zona'));
@@ -79,6 +96,9 @@ class ControllerZonasRiesgos extends Controller
      */
     public function update(Request $request, string $id)
     {
+        if (session('tipo') !== 'Administrador') {
+            return redirect('/')->with('error', 'Acceso no autorizado.');
+        }
         //Actualizar los datos que mandamos para editar
         try{
             $zona = ZonasRiesgo::findOrFail($id);
@@ -110,6 +130,9 @@ class ControllerZonasRiesgos extends Controller
      */
     public function destroy(string $id)
     {
+        if (session('tipo') !== 'Administrador') {
+            return redirect('/')->with('error', 'Acceso no autorizado.');
+        }
         //Eliminar
         try{
             $zona = ZonasRiesgo::findOrFail($id);

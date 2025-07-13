@@ -146,8 +146,6 @@
             },
             tipoSeguridad:{
                 required: true,
-                minlength: 3,
-                maxlength: 25
             },
             latitud:{
                 required: true
@@ -166,9 +164,7 @@
                 required: "Por favor ingrese el radio de la zona segura.",
             },
             tipoSeguridad:{
-                required: "Por favor seleccione un nivel de seguridad."
-                minlength: "No puede tener menos de 3 caracteres.",
-                maxlength: "No puede tener más de 25 caracteres."
+                required: "Por favor seleccione un nivel de seguridad.",
             },
             latitud:{
                 required: "Por favor ingrese una latitud para la zona segura."

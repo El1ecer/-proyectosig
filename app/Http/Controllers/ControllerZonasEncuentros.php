@@ -22,7 +22,8 @@ class ControllerZonasEncuentros extends Controller
 
     public function mapa(){
         //Pagina principal
-        return view('zonasE.mapa');
+        $zonas=ZonasEncuentro::all();
+        return view('zonasE.mapa', compact('zonas'));
     }
 
     /**

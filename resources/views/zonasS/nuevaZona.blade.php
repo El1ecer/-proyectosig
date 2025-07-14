@@ -110,7 +110,7 @@
         const centro = marcador.getPosition();
         const radio = parseFloat(document.getElementById('radio').value) || 0;
 
-        let color = "#00FF00";
+        let color = "#0476D9";
         const nivel = document.getElementById('tipoSeguridad').value;
         if (nivel === "Bajo") color = "#FF0000";
         else if (nivel === "Medio") color = "#FFFF00";

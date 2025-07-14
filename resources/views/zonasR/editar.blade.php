@@ -175,7 +175,7 @@
         const coordenadas = marcadores.map(m => m.getPosition());
 
         const riesgo = document.getElementById('nivelRiesgo').value;
-        let color = "#00FF00"; 
+        let color = "#0476D9"; 
 
         if (riesgo === "Alto") color = "#FF0000";
         else if (riesgo === "Medio") color = "#FFFF00";

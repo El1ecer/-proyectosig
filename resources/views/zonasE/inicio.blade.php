@@ -15,7 +15,7 @@
                     <tr>
                         <th>#</th>
                         <th>Nombre</th>
-                        <th>Capaciad</th>
+                        <th>Capacidad</th>
                         <th>Responsable</th>
                         <th>Coordenadas</th>
                         <th>Acciones</th>
@@ -26,7 +26,15 @@
                     <tr>
                         <td>{{ $index + 1 }}</td>   
                         <td>{{ $zona->nombre }}</td>
-                        <td>{{ $zona->capacidad }}</td>
+                        <td>
+                            @if($zona->capacidad == 100)
+                                {{ "1 - $zona->capacidad" }}
+                            @elseif($zona->capacidad == 500)
+                                {{ "101 - $zona->capacidad" }}
+                            @else
+                                {{ "501 - $zona->capacidad" }}
+                            @endif
+                        </td>
                         <td>{{ $zona->responsable }}</td>
                         <td>
                             <div>

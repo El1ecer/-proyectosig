@@ -22,7 +22,8 @@ class ControllerZonasRiesgos extends Controller
 
     public function mapa(){
         //Pagina principal
-        return view('zonasR.mapa');
+        $zonas=ZonasRiesgo::all();
+        return view('zonasR.mapa', compact('zonas'));
     }
 
     /**

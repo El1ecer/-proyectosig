@@ -22,7 +22,8 @@ class ControllerZonasSeguras extends Controller
 
     public function mapa(){
         //Pagina principal
-        return view('zonasS.mapa');
+        $zonas=ZonasSegura::all();
+        return view('zonasS.mapa', compact('zonas'));
     }
 
     /**

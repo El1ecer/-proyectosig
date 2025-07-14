@@ -20,6 +20,7 @@
                                 <label for="latitud" class="form-label"><b>Contraseña:</b></label>
                                 <input type="password" class="form-control" name="password" id="password" placeholder="Ingrese su contraseña">
                             </div>
+                            
                             <div class="mb-3 text-left">
                                 <a href="{{ route('inicioS.create') }}">No tengo cuenta</a>
                             </div>

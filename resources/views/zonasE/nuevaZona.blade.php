@@ -17,7 +17,12 @@
 
                         <div class="mb-3">
                             <label for="capacidad" class="form-label"><strong>Capacidad:</strong></label>
-                            <input type="number" class="form-control" name="capacidad" id="capacidad" placeholder="Ingrese la capacidad del punto de encuentro.">
+                            <select class="custom-select" name="capacidad" id="capacidad">
+                                <option value="" disabled selected>Capacidad del punto de encuentro</option>
+                                <option value="100">1 - 100</option>
+                                <option value="500">101 - 500</option>
+                                <option value="1000">501 - 1000</option>
+                            </select>
                         </div>
 
                         <div class="mb-3">

@@ -22,6 +22,15 @@
                         </div>
 
                         <div class="mb-3">
+                            <label for="capacidad" class="form-label"><strong>Capacidad:</strong></label>
+                            <select class="custom-select" name="capacidad" id="capacidad">
+                                <option value="100" {{ $zona->capacidad == '100' ? 'selected' : '' }}>1 - 100</option>
+                                <option value="500" {{ $zona->capacidad == '500' ? 'selected' : '' }}>101 - 500</option>
+                                <option value="1000" {{ $zona->capacidad == '1000' ? 'selected' : '' }}>501 - 1000</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
                             <label for="responsable" class="form-label"><strong>Responsable:</strong></label>
                             <input type="text" class="form-control" value="{{ $zona->responsable }}" name="responsable" id="responsable" placeholder="Ingrese el nombre del responsable.">
                         </div>

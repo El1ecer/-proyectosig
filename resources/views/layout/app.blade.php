@@ -182,9 +182,9 @@
                     <p><i class="fa fa-envelope mr-2"></i>jorge.medina9739@utc.edu.ec</p>
                 </div>
                 <div class="col-md-4 mb-5">
-                    <h3 class="text-white mb-4">Cursos de interés</h3>
+                    <h3 class="text-white mb-4">Cosas de interés</h3>
                     <div class="d-flex flex-column justify-content-start">
-                        <a class="text-white-50 mb-2" href="#"><i class="fa fa-angle-right mr-2"></i>SIG</a>
+                        <a class="text-white-50 mb-2" href="#"><i class="fa fa-angle-right mr-2"></i>Zonas de Riesgos</a>
                         <a class="text-white-50 mb-2" href="#"><i class="fa fa-angle-right mr-2"></i>Programación</a>
                         <a class="text-white-50 mb-2" href="#"><i class="fa fa-angle-right mr-2"></i>Big Data</a>
                         <a class="text-white-50 mb-2" href="#"><i class="fa fa-angle-right mr-2"></i>Seguridad Informática</a>

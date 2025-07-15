@@ -3,25 +3,8 @@
 <!-- Header Start -->
 <div class="jumbotron jumbotron-fluid position-relative overlay-bottom" style="margin-bottom: 90px;">
     <div class="container text-center my-5 py-5">
-        <h1 class="text-white mt-4 mb-4">Learn From Home</h1>
-        <h1 class="text-white display-1 mb-5">Education Courses</h1>
-        <div class="mx-auto mb-5" style="width: 100%; max-width: 600px;">
-            <div class="input-group">
-                <div class="input-group-prepend">
-                    <button class="btn btn-outline-light bg-white text-body px-4 dropdown-toggle" type="button" data-toggle="dropdown"
-                        aria-haspopup="true" aria-expanded="false">Courses</button>
-                    <div class="dropdown-menu">
-                        <a class="dropdown-item" href="#">Courses 1</a>
-                        <a class="dropdown-item" href="#">Courses 2</a>
-                        <a class="dropdown-item" href="#">Courses 3</a>
-                    </div>
-                </div>
-                <input type="text" class="form-control border-light" style="padding: 30px 25px;" placeholder="Keyword">
-                <div class="input-group-append">
-                    <button class="btn btn-secondary px-4 px-lg-5">Search</button>
-                </div>
-            </div>
-        </div>
+        <h1 class="text-white mt-4 mb-3 fs-3">Sistema de Gestión de Zonas de Seguridad y Puntos de Encuentro</h1>
+        <h1 class="text-white fs-5 mb-5">Visualiza, gestiona y consulta zonas de riesgo, zonas seguras y puntos de encuentro en tu comunidad.</h1>
     </div>
 </div>
 <!-- Header End -->

@@ -185,10 +185,8 @@
                     <h3 class="text-white mb-4">Cosas de interés</h3>
                     <div class="d-flex flex-column justify-content-start">
                         <a class="text-white-50 mb-2" href="#"><i class="fa fa-angle-right mr-2"></i>Zonas de Riesgos</a>
-                        <a class="text-white-50 mb-2" href="#"><i class="fa fa-angle-right mr-2"></i>Programación</a>
-                        <a class="text-white-50 mb-2" href="#"><i class="fa fa-angle-right mr-2"></i>Big Data</a>
-                        <a class="text-white-50 mb-2" href="#"><i class="fa fa-angle-right mr-2"></i>Seguridad Informática</a>
-                        <a class="text-white-50" href="#"><i class="fa fa-angle-right mr-2"></i>Gestión de Proyectos</a>
+                        <a class="text-white-50 mb-2" href="#"><i class="fa fa-angle-right mr-2"></i>Zonas Seguras</a>
+                        <a class="text-white-50 mb-2" href="#"><i class="fa fa-angle-right mr-2"></i>Puntos de encuentro</a>
                     </div>
                 </div>
                 <div class="col-md-4 mb-5">

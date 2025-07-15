@@ -3,6 +3,9 @@
 <br>
 <div class="container-fluid text-right">
     <div class="py-3 py-lg-0 px-lg-5">
+        <a href="{{ route('zonasE.reporte') }}" class="btn btn-primary" target="_blank">
+            <i class="fa fa-file-pdf"></i> Exportar PDF
+        </a>
         <a href="{{ route('zonasE.create') }}" class="btn btn-primary">Nuevo punto de encuentro</a>
     </div>
 </div>

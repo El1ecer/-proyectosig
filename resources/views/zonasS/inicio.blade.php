@@ -3,6 +3,7 @@
 <br>
 <div class="container-fluid text-right">
     <div class="py-3 py-lg-0 px-lg-5">
+        <a href="{{ route('zonasS.reporte') }}" class="btn btn-success"><i class="fa fa-file-pdf"></i> Exportar PDF</a>
         <a href="{{ route('zonasS.create') }}" class="btn btn-success">Nueva zona segura</a>
     </div>
 </div>

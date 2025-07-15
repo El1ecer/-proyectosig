@@ -25,6 +25,12 @@ Route::get('/zonasR/mapa', [ControllerZonasRiesgos::class, 'mapa'])->name('zonas
 Route::get('/zonasS/mapa', [ControllerZonasSeguras::class, 'mapa'])->name('zonasS.mapa');
 // Definir ruta para el mapa
 Route::get('/zonasE/mapa', [ControllerZonasEncuentros::class, 'mapa'])->name('zonasE.mapa');
+// Definir ruta para exportar pdf
+Route::get('/zonasR/reporte', [ControllerZonasRiesgos::class, 'exportarPDF'])->name('zonasR.reporte');
+// Definir ruta para exportar pdf
+Route::get('/zonasS/reporte', [ControllerZonasSeguras::class, 'exportarPDF'])->name('zonasS.reporte');
+// Definir ruta para exportar pdf
+Route::get('/zonasE/reporte', [ControllerZonasEncuentros::class, 'exportarPDF'])->name('zonasE.reporte');
 
 
 //Ruta para las zonas de riesgo

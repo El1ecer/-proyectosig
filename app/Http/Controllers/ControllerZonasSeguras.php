@@ -5,6 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\ZonasSegura;
 
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Http;
+
 class ControllerZonasSeguras extends Controller
 {
     /**
@@ -25,6 +29,88 @@ class ControllerZonasSeguras extends Controller
         $zonas=ZonasSegura::all();
         return view('zonasS.mapa', compact('zonas'));
     }
+// pk.eyJ1IjoidmludGFpbHN6IiwiYSI6ImNtY3MzajdkMTB0MngyanEyc2o5bjAwOHEifQ.FkEeSTHc8LB9ws0_jaQ6FA
+    public function exportarPDF()
+    {
+        $zonas = ZonasSegura::all();
+
+        foreach ($zonas as $zona) {
+            $centerLat = $zona->latitud;
+            $centerLng = $zona->longitud;
+
+            if (!$centerLat || !$centerLng) {
+                $zona->mapa_base64 = null;
+                continue;
+            }
+
+            // Color del pin según el tipo de seguridad
+            $color = '0476D9'; // Azul
+            if ($zona->tipoSeguridad === 'Bajo') {
+                $color = 'FF0000';
+            } elseif ($zona->tipoSeguridad === 'Medio') {
+                $color = 'FFFF00';
+            }
+
+            // Pin en coordenadas
+            $markerOverlay = "pin-s+$color($centerLng,$centerLat)";
+
+            // Zoom bajo para mostrar un área más amplia
+            $zoom = 15;
+            $width = 400;
+            $height = 200;
+
+            $token = 'pk.eyJ1IjoidmludGFpbHN6IiwiYSI6ImNtY3MzajdkMTB0MngyanEyc2o5bjAwOHEifQ.FkEeSTHc8LB9ws0_jaQ6FA';
+
+            $mapUrl = "https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/$markerOverlay/$centerLng,$centerLat,$zoom/{$width}x{$height}?access_token=$token";
+
+            try {
+                $response = Http::timeout(10)->get($mapUrl);
+
+                if ($response->successful()) {
+                    $base64 = 'data:image/png;base64,' . base64_encode($response->body());
+                    $zona->mapa_base64 = $base64;
+                } else {
+                    $zona->mapa_base64 = null;
+                }
+            } catch (\Exception $e) {
+                $zona->mapa_base64 = null;
+            }
+        }
+
+        $pdf = Pdf::loadView('zonasS.reporte', compact('zonas'));
+        return $pdf->download('zonas_seguras.pdf');
+    }
+
+
+
+    private function getBase64FromUrl($url)
+    {
+        try {
+            // Configurar contexto para evitar errores SSL y permitir acceso remoto
+            $contextOptions = [
+                "ssl" => [
+                    "verify_peer" => false,
+                    "verify_peer_name" => false,
+                ],
+                "http" => [
+                    "header" => "User-Agent: Mozilla/5.0\r\n"
+                ]
+            ];
+
+            $context = stream_context_create($contextOptions);
+            $imageData = file_get_contents($url, false, $context);
+
+            if ($imageData === false) {
+                throw new \Exception("No se pudo obtener la imagen desde la URL.");
+            }
+
+            $mime = 'image/png'; // Asumimos que todas las imágenes de Mapbox son PNG
+            return 'data:' . $mime . ';base64,' . base64_encode($imageData);
+        } catch (\Exception $e) {
+            return null; // Puedes también loguear el error si lo necesitas
+        }
+    }
+
 
     /**
      * Show the form for creating a new resource.

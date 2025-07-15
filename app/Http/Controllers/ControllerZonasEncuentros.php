@@ -5,6 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\ZonasEncuentro;
 
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Http;
+
 class ControllerZonasEncuentros extends Controller
 {
     /**
@@ -25,6 +29,83 @@ class ControllerZonasEncuentros extends Controller
         $zonas=ZonasEncuentro::all();
         return view('zonasE.mapa', compact('zonas'));
     }
+
+    public function exportarPDF()
+    {
+        $zonas = ZonasEncuentro::all();
+
+        foreach ($zonas as $zona) {
+            $lat = $zona->latitud;
+            $lng = $zona->longitud;
+
+            if (!$lat || !$lng) {
+                $zona->mapa_base64 = null;
+                continue;
+            }
+
+            // Elegir color de marcador según capacidad
+            $color = 'E74C3C'; // Verde por defecto (1-100)
+            if ($zona->capacidad == 500) {
+                $color = 'F1C40F'; // Amarillo (101-500)
+            } elseif ($zona->capacidad == 1000) {
+                $color = '2ECC71'; // Rojo (501-1000)
+            }
+
+            // Crear el marcador
+            $marker = "pin-s+$color($lng,$lat)";
+
+            // Construir URL Mapbox
+            $zoom = 15;
+            $size = "400x200";
+            $token = 'pk.eyJ1IjoidmludGFpbHN6IiwiYSI6ImNtY3MzajdkMTB0MngyanEyc2o5bjAwOHEifQ.FkEeSTHc8LB9ws0_jaQ6FA';
+
+            $mapUrl = "https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/$marker/$lng,$lat,$zoom/$size?access_token=$token";
+
+            try {
+                $response = Http::timeout(10)->get($mapUrl);
+
+                if ($response->successful()) {
+                    $zona->mapa_base64 = 'data:image/png;base64,' . base64_encode($response->body());
+                } else {
+                    $zona->mapa_base64 = null;
+                }
+            } catch (\Exception $e) {
+                $zona->mapa_base64 = null;
+            }
+        }
+
+        $pdf = Pdf::loadView('zonasE.reporte', compact('zonas'));
+        return $pdf->download('puntos_encuentro.pdf');
+    }
+
+    private function getBase64FromUrl($url)
+    {
+        try {
+            // Configurar contexto para evitar errores SSL y permitir acceso remoto
+            $contextOptions = [
+                "ssl" => [
+                    "verify_peer" => false,
+                    "verify_peer_name" => false,
+                ],
+                "http" => [
+                    "header" => "User-Agent: Mozilla/5.0\r\n"
+                ]
+            ];
+
+            $context = stream_context_create($contextOptions);
+            $imageData = file_get_contents($url, false, $context);
+
+            if ($imageData === false) {
+                throw new \Exception("No se pudo obtener la imagen desde la URL.");
+            }
+
+            $mime = 'image/png'; // Asumimos que todas las imágenes de Mapbox son PNG
+            return 'data:' . $mime . ';base64,' . base64_encode($imageData);
+        } catch (\Exception $e) {
+            return null; // Puedes también loguear el error si lo necesitas
+        }
+    }
+
 
     /**
      * Show the form for creating a new resource.

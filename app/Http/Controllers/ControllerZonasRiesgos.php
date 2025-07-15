@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\ZonasRiesgo;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Http;
 
 class ControllerZonasRiesgos extends Controller
 {
@@ -25,6 +28,115 @@ class ControllerZonasRiesgos extends Controller
         $zonas=ZonasRiesgo::all();
         return view('zonasR.mapa', compact('zonas'));
     }
+    // pk.eyJ1IjoidmludGFpbHN6IiwiYSI6ImNtY3MzajdkMTB0MngyanEyc2o5bjAwOHEifQ.FkEeSTHc8LB9ws0_jaQ6FA
+
+    public function exportarPDF()
+    {
+        $zonas = ZonasRiesgo::all();
+
+        foreach ($zonas as $zona) {
+            $markers = [];
+            $coordenadas = [];
+
+            if ($zona->latitud1 && $zona->longitud1) {
+                $markers[] = "pin-s+ff0000({$zona->longitud1},{$zona->latitud1})";
+                $coordenadas[] = [$zona->longitud1, $zona->latitud1];
+            }
+            if ($zona->latitud2 && $zona->longitud2) {
+                $markers[] = "pin-s+00ff00({$zona->longitud2},{$zona->latitud2})";
+                $coordenadas[] = [$zona->longitud2, $zona->latitud2];
+            }
+            if ($zona->latitud3 && $zona->longitud3) {
+                $markers[] = "pin-s+0000ff({$zona->longitud3},{$zona->latitud3})";
+                $coordenadas[] = [$zona->longitud3, $zona->latitud3];
+            }
+            if ($zona->latitud4 && $zona->longitud4) {
+                $markers[] = "pin-s+ffff00({$zona->longitud4},{$zona->latitud4})";
+                $coordenadas[] = [$zona->longitud4, $zona->latitud4];
+            }
+            if ($zona->latitud5 && $zona->longitud5) {
+                $markers[] = "pin-s+00ffff({$zona->longitud5},{$zona->latitud5})";
+                $coordenadas[] = [$zona->longitud5, $zona->latitud5];
+            }
+
+            // Si hay más de un punto, cerrar el polígono para la línea
+            if(count($coordenadas) > 1){
+                $coordenadas[] = $coordenadas[0]; // opcional para cerrar la línea en forma de polígono
+            }
+
+            // Construir path para la línea: "lng lat;lng lat;..."
+            $pathCoords = collect($coordenadas)
+                ->map(fn($c) => $c[0] . ' ' . $c[1])
+                ->implode(';');
+
+            // Definir path con ancho 3px, borde negro, sin relleno transparente
+            $path = "path-3+000000-00000000($pathCoords)";
+
+            // Unir marcadores y path separados por coma
+            $overlays = implode(',', $markers);
+            if ($pathCoords) {
+                $overlays .= ',' . $path;
+            }
+
+            // Calcular centro
+            $centerLng = collect($coordenadas)->pluck(0)->avg() ?? -78.6;
+            $centerLat = collect($coordenadas)->pluck(1)->avg() ?? -0.92;
+
+            $zoom = 13;
+            $width = 400;
+            $height = 200;
+            $token = 'pk.eyJ1IjoidmludGFpbHN6IiwiYSI6ImNtY3MzajdkMTB0MngyanEyc2o5bjAwOHEifQ.FkEeSTHc8LB9ws0_jaQ6FA';
+
+            $mapUrl = "https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/$overlays/$centerLng,$centerLat,$zoom/{$width}x{$height}?access_token=$token";
+
+            try {
+                $response = Http::timeout(10)->get($mapUrl);
+
+                if ($response->successful()) {
+                    $base64 = 'data:image/png;base64,' . base64_encode($response->body());
+                    $zona->mapa_base64 = $base64; // temporal para la vista PDF
+                } else {
+                    $zona->mapa_base64 = null;
+                }
+            } catch (\Exception $e) {
+                $zona->mapa_base64 = null;
+            }
+        }
+
+        $pdf = Pdf::loadView('zonasR.reporte', compact('zonas'));
+        return $pdf->download('zonas_riesgo.pdf');
+    }
+
+
+
+    private function getBase64FromUrl($url)
+    {
+        try {
+            // Configurar contexto para evitar errores SSL y permitir acceso remoto
+            $contextOptions = [
+                "ssl" => [
+                    "verify_peer" => false,
+                    "verify_peer_name" => false,
+                ],
+                "http" => [
+                    "header" => "User-Agent: Mozilla/5.0\r\n"
+                ]
+            ];
+
+            $context = stream_context_create($contextOptions);
+            $imageData = file_get_contents($url, false, $context);
+
+            if ($imageData === false) {
+                throw new \Exception("No se pudo obtener la imagen desde la URL.");
+            }
+
+            $mime = 'image/png'; // Asumimos que todas las imágenes de Mapbox son PNG
+            return 'data:' . $mime . ';base64,' . base64_encode($imageData);
+        } catch (\Exception $e) {
+            return null; // Puedes también loguear el error si lo necesitas
+        }
+    }
+
 
     /**
      * Show the form for creating a new resource.

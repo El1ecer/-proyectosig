@@ -19,8 +19,8 @@
                 </div>
                 <div class="col-lg-7">
                     <div class="section-title position-relative mb-4">
-                        <h6 class="d-inline-block position-relative text-secondary text-uppercase pb-2">Sobre nosotros</h6>
-                        <h1 class="display-4">Zonas de riesgo</h1>
+                        <h6 class="d-inline-block position-relative text-secondary text-uppercase pb-2">Informate</h6>
+                        <h1 class="display-4">Zonas de Riesgo</h1>
                     </div>
                     <p>
                         Las <strong>zonas de riesgo</strong> son lugares donde pueden ocurrir peligros que afectan la seguridad de las personas, sus viviendas o el medio ambiente. Estos riesgos pueden ser naturales, como <strong>inundaciones, terremotos, deslizamientos</strong> o <strong>incendios forestales</strong>, o provocados por el ser humano, como <strong>derrames químicos o contaminación</strong>.
@@ -39,35 +39,41 @@
             <div class="row">
                 <div class="col-lg-7 my-5 pt-5 pb-lg-5">
                     <div class="section-title position-relative mb-4">
-                        <h6 class="d-inline-block position-relative text-secondary text-uppercase pb-2">Why Choose Us?</h6>
-                        <h1 class="display-4">Why You Should Start Learning with Us?</h1>
+                        <h6 class="d-inline-block position-relative text-secondary text-uppercase pb-2">Infórmate</h6>
+                        <h1 class="display-4">Zonas Seguras</h1>
                     </div>
-                    <p class="mb-4 pb-2">Aliquyam accusam clita nonumy ipsum sit sea clita ipsum clita, ipsum dolores amet voluptua duo dolores et sit ipsum rebum, sadipscing et erat eirmod diam kasd labore clita est. Diam sanctus gubergren sit rebum clita amet.</p>
+                    <p class="mb-4 pb-2">
+                        Las <strong>zonas seguras</strong> son lugares que han sido evaluados como apropiados para resguardarse durante una emergencia, como terremotos, incendios o inundaciones. Están alejadas de peligros inmediatos y son fácilmente accesibles por la comunidad.
+                    </p>
+                    <p class="mb-4 pb-2">
+                        Estas zonas pueden incluir parques, canchas abiertas, plazas o espacios libres de cables, muros o estructuras inestables. En caso de evacuación, conocer su ubicación es clave para proteger la vida.
+                    </p>
+
                     <div class="d-flex mb-3">
                         <div class="btn-icon bg-primary mr-4">
-                            <i class="fa fa-2x fa-graduation-cap text-white"></i>
+                            <i class="fa fa-2x fa-shield-alt text-white"></i>
                         </div>
                         <div class="mt-n1">
-                            <h4>Skilled Instructors</h4>
-                            <p>Labore rebum duo est Sit dolore eos sit tempor eos stet, vero vero clita magna kasd no nonumy et eos dolor magna ipsum.</p>
+                            <h4>Protección en emergencias</h4>
+                            <p>Son espacios definidos para que las personas puedan refugiarse de forma segura durante eventos peligrosos.</p>
                         </div>
                     </div>
                     <div class="d-flex mb-3">
-                        <div class="btn-icon bg-secondary mr-4">
-                            <i class="fa fa-2x fa-certificate text-white"></i>
+                        <div class="btn-icon bg-success mr-4">
+                            <i class="fa fa-2x fa-map-marker-alt text-white"></i>
                         </div>
                         <div class="mt-n1">
-                            <h4>International Certificate</h4>
-                            <p>Labore rebum duo est Sit dolore eos sit tempor eos stet, vero vero clita magna kasd no nonumy et eos dolor magna ipsum.</p>
+                            <h4>Fácil ubicación</h4>
+                            <p>Estas zonas están marcadas en mapas comunitarios y pueden consultarse desde nuestro sistema en tiempo real.</p>
                         </div>
                     </div>
                     <div class="d-flex">
                         <div class="btn-icon bg-warning mr-4">
-                            <i class="fa fa-2x fa-book-reader text-white"></i>
+                            <i class="fa fa-2x fa-users text-white"></i>
                         </div>
                         <div class="mt-n1">
-                            <h4>Online Classes</h4>
-                            <p class="m-0">Labore rebum duo est Sit dolore eos sit tempor eos stet, vero vero clita magna kasd no nonumy et eos dolor magna ipsum.</p>
+                            <h4>Acceso comunitario</h4>
+                            <p class="m-0">Toda la comunidad puede acudir a ellas en caso de emergencia, con capacidad suficiente y buena accesibilidad.</p>
                         </div>
                     </div>
                 </div>
@@ -79,6 +85,7 @@
             </div>
         </div>
     </div>
+
     <!-- Feature Start -->
 
 

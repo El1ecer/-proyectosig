@@ -8,6 +8,7 @@
         th, td { border: 1px solid #ccc; padding: 6px; text-align: left; }
         .title { text-align: center; font-size: 18px; font-weight: bold; margin-bottom: 15px; }
         .map-img { width: 300px; height: auto; }
+        .qr-img { display: block; margin: 20px auto; width: 200px; }
     </style>
 </head>
 <body>
@@ -43,5 +44,12 @@
             @endforeach
         </tbody>
     </table>
+
+    @if ($qrBase64)
+        <img src="{{ $qrBase64 }}" alt="QR Code" class="qr-img" />
+    @else
+        <p style="text-align: center;">[QR no disponible]</p>
+    @endif
+
 </body>
 </html>

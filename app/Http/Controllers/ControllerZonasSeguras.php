@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\ZonasSegura;
-
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Http;
+use Endroid\QrCode\QrCode;
+use Endroid\QrCode\Writer\PngWriter;
+use Endroid\QrCode\Builder\Builder as BuilderStatic;
+use Endroid\QrCode\Encoding\Encoding;
 
 class ControllerZonasSeguras extends Controller
 {
@@ -19,56 +21,43 @@ class ControllerZonasSeguras extends Controller
         if (session('tipo') !== 'Administrador') {
             return redirect('/')->with('error', 'Acceso no autorizado.');
         }
-        //Pagina principal
-        $zonas=ZonasSegura::all();
+        $zonas = ZonasSegura::all();
         return view('zonasS.inicio', compact('zonas'));
     }
 
-    public function mapa(){
-        //Pagina principal
-        $zonas=ZonasSegura::all();
+    public function mapa()
+    {
+        $zonas = ZonasSegura::all();
         return view('zonasS.mapa', compact('zonas'));
     }
-// pk.eyJ1IjoidmludGFpbHN6IiwiYSI6ImNtY3MzajdkMTB0MngyanEyc2o5bjAwOHEifQ.FkEeSTHc8LB9ws0_jaQ6FA
+
+    
     public function exportarPDF()
     {
+        $googleMapsApiKey = 'AIzaSyC9iGJnedPYn_ZU7CnKkUilE2IDVN0_7W0'; // API Key de Google
+
         $zonas = ZonasSegura::all();
 
         foreach ($zonas as $zona) {
-            $centerLat = $zona->latitud;
-            $centerLng = $zona->longitud;
+            $lat = $zona->latitud;
+            $lng = $zona->longitud;
 
-            if (!$centerLat || !$centerLng) {
-                $zona->mapa_base64 = null;
-                continue;
-            }
-
-            // Color del pin según el tipo de seguridad
-            $color = '0476D9'; // Azul
-            if ($zona->tipoSeguridad === 'Bajo') {
-                $color = 'FF0000';
-            } elseif ($zona->tipoSeguridad === 'Medio') {
-                $color = 'FFFF00';
-            }
-
-            // Pin en coordenadas
-            $markerOverlay = "pin-s+$color($centerLng,$centerLat)";
-
-            // Zoom bajo para mostrar un área más amplia
-            $zoom = 15;
-            $width = 400;
-            $height = 200;
-
-            $token = 'pk.eyJ1IjoidmludGFpbHN6IiwiYSI6ImNtY3MzajdkMTB0MngyanEyc2o5bjAwOHEifQ.FkEeSTHc8LB9ws0_jaQ6FA';
-
-            $mapUrl = "https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/$markerOverlay/$centerLng,$centerLat,$zoom/{$width}x{$height}?access_token=$token";
+            $staticMapUrl = "https://maps.googleapis.com/maps/api/staticmap?" . http_build_query([
+                'center' => "$lat,$lng",
+                'zoom' => 16,
+                'size' => '300x300',
+                'markers' => "color:red|label:Z|$lat,$lng",
+                'key' => $googleMapsApiKey
+            ]);
 
             try {
-                $response = Http::timeout(10)->get($mapUrl);
+                $response = Http::withHeaders([
+                    'User-Agent' => 'Mozilla/5.0'
+                ])->get($staticMapUrl);
 
                 if ($response->successful()) {
-                    $base64 = 'data:image/png;base64,' . base64_encode($response->body());
-                    $zona->mapa_base64 = $base64;
+                    $imageContents = $response->body();
+                    $zona->mapa_base64 = 'data:image/png;base64,' . base64_encode($imageContents);
                 } else {
                     $zona->mapa_base64 = null;
                 }
@@ -77,40 +66,24 @@ class ControllerZonasSeguras extends Controller
             }
         }
 
-        $pdf = Pdf::loadView('zonasS.reporte', compact('zonas'));
-        return $pdf->download('zonas_seguras.pdf');
-    }
-
-
-
-    private function getBase64FromUrl($url)
-    {
+        // Generar código QR
         try {
-            // Configurar contexto para evitar errores SSL y permitir acceso remoto
-            $contextOptions = [
-                "ssl" => [
-                    "verify_peer" => false,
-                    "verify_peer_name" => false,
-                ],
-                "http" => [
-                    "header" => "User-Agent: Mozilla/5.0\r\n"
-                ]
-            ];
+            $qrContent = url('/zonasS');
+            $result = BuilderStatic::create()
+                ->data($qrContent)
+                ->size(200)
+                ->margin(10)
+                ->encoding(new Encoding('UTF-8'))
+                ->build();
 
-            $context = stream_context_create($contextOptions);
-            $imageData = file_get_contents($url, false, $context);
-
-            if ($imageData === false) {
-                throw new \Exception("No se pudo obtener la imagen desde la URL.");
-            }
-
-            $mime = 'image/png'; // Asumimos que todas las imágenes de Mapbox son PNG
-            return 'data:' . $mime . ';base64,' . base64_encode($imageData);
+            $qrBase64 = 'data:image/png;base64,' . base64_encode($result->getString());
         } catch (\Exception $e) {
-            return null; // Puedes también loguear el error si lo necesitas
+            $qrBase64 = null;
         }
-    }
 
+        $pdf = Pdf::loadView('zonasS.reporte', compact('zonas', 'qrBase64'));
+        return $pdf->stream('reporte_zonas.pdf');
+    }
 
     /**
      * Show the form for creating a new resource.
@@ -120,7 +93,6 @@ class ControllerZonasSeguras extends Controller
         if (session('tipo') !== 'Administrador') {
             return redirect('/')->with('error', 'Acceso no autorizado.');
         }
-        //Vista para guardar datos
         return view('zonasS.nuevaZona');
     }
 
@@ -132,7 +104,7 @@ class ControllerZonasSeguras extends Controller
         if (session('tipo') !== 'Administrador') {
             return redirect('/')->with('error', 'Acceso no autorizado.');
         }
-        //Guardar los datos en la bdd
+
         try {
             $datos = [
                 'nombre' => $request->nombre,
@@ -144,19 +116,9 @@ class ControllerZonasSeguras extends Controller
             ];
             ZonasSegura::create($datos);
             return redirect()->route('zonasS.index')->with('mensaje', 'Zona segura registrada correctamente.');
-
-        } catch (\Exception $e) { //Se captura la excepcion y la manda en el mensaje de error
-            //El back es para redirigir de vuelta al formulario
+        } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Hubo un error al guardar la zona segura: ' . $e->getMessage());
         }
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
     }
 
     /**
@@ -167,7 +129,6 @@ class ControllerZonasSeguras extends Controller
         if (session('tipo') !== 'Administrador') {
             return redirect('/')->with('error', 'Acceso no autorizado.');
         }
-        //Vista para editar
         $zona = ZonasSegura::findOrFail($id);
         return view('zonasS.editar', compact('zona'));
     }
@@ -180,8 +141,8 @@ class ControllerZonasSeguras extends Controller
         if (session('tipo') !== 'Administrador') {
             return redirect('/')->with('error', 'Acceso no autorizado.');
         }
-        //Actualizar los datos que mandamos para editar
-        try{
+
+        try {
             $zona = ZonasSegura::findOrFail($id);
             $zona->update([
                 'nombre' => $request->nombre,
@@ -192,8 +153,7 @@ class ControllerZonasSeguras extends Controller
                 'tipoSeguridad' => $request->tipoSeguridad
             ]);
             return redirect()->route('zonasS.index')->with('mensaje', 'Zona actualizada correctamente.');
-        }
-        catch (\Exception $e){
+        } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Hubo un error al actualizar la zona segura: ' . $e->getMessage());
         }
     }
@@ -206,14 +166,12 @@ class ControllerZonasSeguras extends Controller
         if (session('tipo') !== 'Administrador') {
             return redirect('/')->with('error', 'Acceso no autorizado.');
         }
-        //Eliminar
-        try{
+
+        try {
             $zona = ZonasSegura::findOrFail($id);
             $zona->delete();
-
             return redirect()->route('zonasS.index')->with('mensaje', 'Zona eliminada correctamente.');
-        }
-        catch (\Exception $e){
+        } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Hubo un error al eliminar la zona segura: ' . $e->getMessage());
         }
     }

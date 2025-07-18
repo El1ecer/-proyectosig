@@ -20,7 +20,7 @@ jobs:
         run: |
           php artisan config:cache
           php artisan route:cache
-          php artisan view:cache
+          php artisan view:cache 
 
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4

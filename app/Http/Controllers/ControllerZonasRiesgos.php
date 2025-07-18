@@ -9,7 +9,14 @@ use Illuminate\Support\Facades\Http;
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Encoding\Encoding;
 use Endroid\QrCode\Writer\PngWriter;
-use Illuminate\Support\Facades\Log; // ¡IMPORTANTE! Asegúrate de que esto está importado
+use Illuminate\Support\Facades\Log;
+
+// Agrega estas si las necesitas para el QR, aunque no las uses todas en este ejemplo
+use Endroid\QrCode\ErrorCorrectionLevel\ErrorCorrectionLevelHigh;
+use Endroid\QrCode\Label\Alignment\LabelAlignmentCenter;
+use Endroid\QrCode\Label\Font\NotoSans;
+use Endroid\QrCode\RoundBlockSizeMode\RoundBlockSizeModeMargin;
+
 
 class ControllerZonasRiesgos extends Controller
 {
@@ -41,15 +48,23 @@ class ControllerZonasRiesgos extends Controller
         foreach ($zonas as $zona) {
             $coordenadas = [];
 
+            // Log: Mostrar las coordenadas de cada zona antes de procesar
+            Log::info('Procesando zona ID: ' . $zona->id . ' Nombre: ' . $zona->nombre);
+
             for ($i = 1; $i <= 4; $i++) {
                 $lat = $zona["latitud$i"];
                 $lng = $zona["longitud$i"];
                 if (is_numeric($lat) && is_numeric($lng)) {
                     $coordenadas[] = [$lng, $lat]; // lng, lat (¡orden importante para Mapbox!)
+                } else {
+                    Log::warning("Coordenada {$i} para zona ID " . $zona->id . " no es numérica: Lat: {$lat}, Lng: {$lng}");
                 }
             }
 
             if (count($coordenadas) >= 3) {
+                // Log: Coordenadas válidas para polígono
+                Log::info('Coordenadas para polígono zona ' . $zona->id . ': ' . json_encode($coordenadas));
+
                 // Calcular centro del mapa
                 $avgLat = array_sum(array_column($coordenadas, 1)) / count($coordenadas);
                 $avgLng = array_sum(array_column($coordenadas, 0)) / count($coordenadas);
@@ -62,20 +77,41 @@ class ControllerZonasRiesgos extends Controller
                 $overlay = "path-5+f44-0.5(" . $polygonCoords . ")";
 
                 // URL de Mapbox
-                $mapboxToken = env('MAPBOX_TOKEN'); // asegúrate de tener esto en .env
-                $mapboxUrl = "https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/{$overlay}/{$avgLng},{$avgLat},15/500x300?access_token={$mapboxToken}";
+                $mapboxToken = env('MAPBOX_TOKEN');
+                // Log: Verificar si el token está presente
+                if (empty($mapboxToken)) {
+                    Log::error("MAPBOX_TOKEN no está configurado en el archivo .env o está vacío.");
+                    $mapaBase64 = null;
+                } else {
+                    $mapboxUrl = "https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/{$overlay}/{$avgLng},{$avgLat},15/500x300?access_token={$mapboxToken}";
 
-                try {
-                    $response = Http::get($mapboxUrl);
-                    if ($response->ok() && $response->header('Content-Type') === 'image/png') {
-                        $mapaBase64 = 'data:image/png;base64,' . base64_encode($response->body());
-                    } else {
+                    // Log: URL completa de Mapbox
+                    Log::info('URL de Mapbox para zona ' . $zona->id . ': ' . $mapboxUrl);
+
+                    try {
+                        $response = Http::timeout(15)->get($mapboxUrl); // Aumentar el timeout por si acaso
+
+                        if ($response->successful()) { // Verifica códigos 2xx
+                            if ($response->header('Content-Type') === 'image/png') {
+                                $mapaBase64 = 'data:image/png;base64,' . base64_encode($response->body());
+                                Log::info('Mapa generado exitosamente para zona ' . $zona->id);
+                            } else {
+                                // Log: Contenido de la respuesta si no es PNG
+                                Log::warning("Mapbox API no devolvió una imagen PNG para zona " . $zona->id . ". Content-Type: " . $response->header('Content-Type') . ". Respuesta: " . $response->body());
+                                $mapaBase64 = null;
+                            }
+                        } else {
+                            // Log: Error en la respuesta de la API de Mapbox (ej. 401, 403, 404)
+                            Log::error("Error en la respuesta de Mapbox API para zona " . $zona->id . ". Status: " . $response->status() . ". Cuerpo: " . $response->body());
+                            $mapaBase64 = null;
+                        }
+                    } catch (\Exception $e) {
+                        Log::error("Excepción al obtener mapa de Mapbox para zona " . $zona->id . ": " . $e->getMessage());
                         $mapaBase64 = null;
                     }
-                } catch (\Exception $e) {
-                    $mapaBase64 = null;
                 }
             } else {
+                Log::warning('Zona ID ' . $zona->id . ' no tiene suficientes coordenadas válidas para formar un polígono (necesita al menos 3). Coordenadas encontradas: ' . count($coordenadas));
                 $mapaBase64 = null;
             }
 
@@ -85,15 +121,25 @@ class ControllerZonasRiesgos extends Controller
             ];
         }
 
-        // Generar QR para todo el documento (opcional, puede ser URL o mensaje)
-        $qr = Builder::create()
-            ->data('https://ejemplo.com/reporte')
-            ->encoding(new Encoding('UTF-8'))
-            ->size(100)
-            ->margin(10)
-            ->build();
+        // ... (resto de tu código para generar QR y PDF) ...
+        $qrData = 'https://ejemplo.com/reporte';
 
-        $qrBase64 = $qr->getDataUri();
+        try {
+            $qr = Builder::create()
+                ->writer(new PngWriter())
+                ->data($qrData)
+                ->encoding(new Encoding('UTF-8'))
+                ->size(100)
+                ->margin(10)
+                ->build();
+
+            $qrBase64 = 'data:image/png;base64,' . base64_encode($qr->getString());
+
+        } catch (\Exception $e) {
+            Log::error("Error al generar el QR para el reporte: " . $e->getMessage());
+            $qrBase64 = null;
+        }
+        // --- FIN: Generación del Código QR ---
 
         // Cargar la vista
         $pdf = Pdf::loadView('zonasR.reporte', [
@@ -101,38 +147,12 @@ class ControllerZonasRiesgos extends Controller
             'qrBase64' => $qrBase64,
         ]);
 
-        return $pdf->stream('reporte-zonas.pdf');
+        return $pdf->download('reporte-zonas.pdf');
     }
 
-    /**
-     * Esta función getBase64FromUrl no es necesaria si usas Http::get() de Laravel.
-     * La he dejado comentada por si tenías alguna dependencia de ella en otro lado,
-     * pero para obtener las imágenes de Mapbox, Http::get() es más robusta y Laravel-friendly.
-     */
-    // private function getBase64FromUrl($url)
-    // {
-    //     try {
-    //         $contextOptions = [
-    //             "ssl" => [
-    //                 "verify_peer" => false,
-    //                 "verify_peer_name" => false,
-    //             ],
-    //             "http" => [
-    //                 "header" => "User-Agent: Mozilla/5.0\r\n"
-    //             ]
-    //         ];
-    //         $context = stream_context_create($contextOptions);
-    //         $imageData = file_get_contents($url, false, $context);
-    //         if ($imageData === false) {
-    //             throw new \Exception("No se pudo obtener la imagen desde la URL.");
-    //         }
-    //         $mime = 'image/png'; // Asumimos PNG
-    //         return 'data:' . $mime . ';base64,' . base64_encode($imageData);
-    //     } catch (\Exception $e) {
-    //         Log::error("Error en getBase64FromUrl: " . $e->getMessage() . " URL: " . $url);
-    //         return null;
-    //     }
-    // }
+
+    // ... el resto de tu controlador sigue igual ...
+    // La función getBase64FromUrl sigue comentada, lo cual está bien.
 
     /**
      * Show the form for creating a new resource.

@@ -7,7 +7,7 @@
         table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
         th, td { border: 1px solid #ccc; padding: 6px; text-align: left; }
         .title { text-align: center; font-size: 18px; font-weight: bold; margin-bottom: 15px; }
-        .map-img { width: 300px; height: auto; }
+        img { max-width: 300px; height: auto; }
         .qr-img { display: block; margin: 20px auto; width: 200px; }
     </style>
 </head>
@@ -27,29 +27,28 @@
         </thead>
         <tbody>
             @foreach($zonas as $index => $zona)
-            <tr>
-                <td>{{ $index + 1 }}</td>
-                <td>{{ $zona->nombre }}</td>
-                <td>{{ $zona->radio }}</td>
-                <td>{{ $zona->tipoSeguridad }}</td>
-                <td>{{ $zona->latitud }}, {{ $zona->longitud }}</td>
-                <td>
-                    @if($zona->mapa_base64)
-                        <img src="{{ $zona->mapa_base64 }}" alt="Mapa" class="map-img" />
-                    @else
-                        <span>No disponible</span>
-                    @endif
-                </td>
-            </tr>
+                <tr>
+                    <td>{{ $index + 1 }}</td>
+                    <td>{{ $zona->nombre }}</td>
+                    <td>{{ $zona->radio }}</td>
+                    <td>{{ $zona->tipoSeguridad }}</td>
+                    <td>{{ $zona->latitud }}, {{ $zona->longitud }}</td>
+                    <td>
+                        @if ($zona->mapa_base64)
+                            <img src="{{ $zona->mapa_base64 }}" alt="Mapa" />
+                        @else
+                            <span>No disponible</span>
+                        @endif
+                    </td>
+                </tr>
             @endforeach
         </tbody>
     </table>
 
     @if ($qrBase64)
-        <img src="{{ $qrBase64 }}" alt="QR Code" class="qr-img" />
+        <img src="{{ $qrBase64 }}" alt="Código QR" class="qr-img" />
     @else
         <p style="text-align: center;">[QR no disponible]</p>
     @endif
-
 </body>
 </html>

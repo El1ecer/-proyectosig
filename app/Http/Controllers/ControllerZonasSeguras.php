@@ -6,16 +6,12 @@ use Illuminate\Http\Request;
 use App\Models\ZonasSegura;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Http;
-use Endroid\QrCode\QrCode;
-use Endroid\QrCode\Writer\PngWriter;
-use Endroid\QrCode\Builder\Builder as BuilderStatic;
+use Endroid\QrCode\Builder\Builder ;
 use Endroid\QrCode\Encoding\Encoding;
-
+use Endroid\QrCode\Writer\PngWriter;
+use Illuminate\Support\Facades\Storage;
 class ControllerZonasSeguras extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         if (session('tipo') !== 'Administrador') {
@@ -31,63 +27,58 @@ class ControllerZonasSeguras extends Controller
         return view('zonasS.mapa', compact('zonas'));
     }
 
-    
-    public function exportarPDF()
+   public function exportarPDF()
     {
-        $googleMapsApiKey = 'AIzaSyC9iGJnedPYn_ZU7CnKkUilE2IDVN0_7W0'; // API Key de Google
-
         $zonas = ZonasSegura::all();
 
-        foreach ($zonas as $zona) {
-            $lat = $zona->latitud;
-            $lng = $zona->longitud;
+        // Asegúrate que esta carpeta exista
+        $mapasDir = storage_path('app/public/mapas');
 
-            $staticMapUrl = "https://maps.googleapis.com/maps/api/staticmap?" . http_build_query([
-                'center' => "$lat,$lng",
-                'zoom' => 16,
-                'size' => '300x300',
-                'markers' => "color:red|label:Z|$lat,$lng",
-                'key' => $googleMapsApiKey
-            ]);
+        if (!file_exists($mapasDir)) {
+            mkdir($mapasDir, 0777, true);
+        }
+
+        // Token de Mapbox proporcionado por ti
+        $mapboxToken = 'pk.eyJ1IjoiZWxpby0xIiwiYSI6ImNtZDgwcnNrbzAxMDMycXB0ZTI3dHNuZzMifQ.2Le6GSlbTKiUPYnvPylIog';
+
+        foreach ($zonas as $zona) {
+            // Construcción de la URL del mapa estático de Mapbox
+            $url = "https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/pin-l+ff0000({$zona->longitud},{$zona->latitud})/{$zona->longitud},{$zona->latitud},14,0/300x300?access_token={$mapboxToken}";
+
+            $mapaNombre = "mapa_{$zona->id}.png";
+            $mapaPath = $mapasDir . '/' . $mapaNombre;
 
             try {
-                $response = Http::withHeaders([
-                    'User-Agent' => 'Mozilla/5.0'
-                ])->get($staticMapUrl);
+                $mapaContenido = file_get_contents($url);
+                file_put_contents($mapaPath, $mapaContenido);
 
-                if ($response->successful()) {
-                    $imageContents = $response->body();
-                    $zona->mapa_base64 = 'data:image/png;base64,' . base64_encode($imageContents);
-                } else {
-                    $zona->mapa_base64 = null;
-                }
+                // Convertir a base64 para mostrar en el PDF
+                $zona->mapa_base64 = 'data:image/png;base64,' . base64_encode($mapaContenido);
             } catch (\Exception $e) {
                 $zona->mapa_base64 = null;
             }
         }
 
-        // Generar código QR
-        try {
-            $qrContent = url('/zonasS');
-            $result = BuilderStatic::create()
-                ->data($qrContent)
-                ->size(200)
-                ->margin(10)
-                ->encoding(new Encoding('UTF-8'))
-                ->build();
+        // Generar QR que redirija a alguna URL de tu sistema
+        $urlQR = url('/zonas-seguras');
 
-            $qrBase64 = 'data:image/png;base64,' . base64_encode($result->getString());
-        } catch (\Exception $e) {
-            $qrBase64 = null;
-        }
+        $qr = Builder::create()
+            ->writer(new PngWriter())
+            ->data($urlQR)
+            ->encoding(new Encoding('UTF-8'))
+            ->size(200)
+            ->margin(10)
+            ->build();
 
+        $qrBase64 = 'data:image/png;base64,' . base64_encode($qr->getString());
+
+        // Generar PDF
         $pdf = Pdf::loadView('zonasS.reporte', compact('zonas', 'qrBase64'));
-        return $pdf->stream('reporte_zonas.pdf');
+
+        return $pdf->download('reporte_zonas_seguras.pdf');
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
+
     public function create()
     {
         if (session('tipo') !== 'Administrador') {
@@ -96,9 +87,6 @@ class ControllerZonasSeguras extends Controller
         return view('zonasS.nuevaZona');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         if (session('tipo') !== 'Administrador') {
@@ -121,9 +109,6 @@ class ControllerZonasSeguras extends Controller
         }
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(string $id)
     {
         if (session('tipo') !== 'Administrador') {
@@ -133,9 +118,6 @@ class ControllerZonasSeguras extends Controller
         return view('zonasS.editar', compact('zona'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
         if (session('tipo') !== 'Administrador') {
@@ -158,9 +140,6 @@ class ControllerZonasSeguras extends Controller
         }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
         if (session('tipo') !== 'Administrador') {

@@ -34,7 +34,7 @@
                     <tr>
                         <td>{{ $index + 1 }}</td>   
                         <td>{{ $zona->nombre }}</td>
-                        <td>{{ Str::limit($zona->descripcion, 50) }}</td>
+                        <td>{{ str($zona->descripcion)->limit(50) }}</td>
                         <td>{{ $zona->nivelRiesgo }}</td>
                         <td>
                             <div>

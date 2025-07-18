@@ -3,17 +3,17 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\ZonasRiesgo;
+use App\Models\ZonasRiesgo; // Asegúrate de que el modelo ZonasRiesgo exista y sea correcto.
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Http; // Para hacer la solicitud HTTP a Mapbox.
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Encoding\Encoding;
 use Endroid\QrCode\Writer\PngWriter;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Log; // Para depuración, es útil mantenerlo.
 use Endroid\QrCode\ErrorCorrectionLevel\ErrorCorrectionLevelHigh;
-use Endroid\QrCode\Label\Alignment\LabelAlignmentCenter;
-use Endroid\QrCode\Label\Font\NotoSans;
-use Endroid\QrCode\RoundBlockSizeMode\RoundBlockSizeModeMargin;
+use Endroid\QrCode\Label\Alignment\LabelAlignmentCenter; // Si no usas etiquetas, puedes quitarlo.
+use Endroid\QrCode\Label\Font\NotoSans; // Si no usas fuentes personalizadas para QR, puedes quitarlo.
+use Endroid\QrCode\RoundBlockSizeMode\RoundBlockSizeModeMargin; // Si no usas este modo de QR, puedes quitarlo.
 
 
 class ControllerZonasRiesgos extends Controller
@@ -26,14 +26,12 @@ class ControllerZonasRiesgos extends Controller
         if (session('tipo') !== 'Administrador') {
             return redirect('/')->with('error', 'Acceso no autorizado.');
         }
-        //Pagina principal
         $zonas = ZonasRiesgo::all();
         return view('zonasR.inicio', compact('zonas'));
     }
 
     public function mapa()
     {
-        //Pagina principal
         $zonas = ZonasRiesgo::all();
         return view('zonasR.mapa', compact('zonas'));
     }
@@ -41,68 +39,92 @@ class ControllerZonasRiesgos extends Controller
     public function exportarPDF()
     {
         $zonas = ZonasRiesgo::all();
-
         $zonasConMapas = [];
-        foreach ($zonas as $zona) {
-            $coordenadas = [];
 
-            Log::info('Procesando zona ID: ' . $zona->id . ' Nombre: ' . $zona->nombre);
+        // Este es el token que has proporcionado y que funciona en otro lado
+        $mapboxToken = 'pk.eyJ1IjoiZWxpby0xIiwiYSI6ImNtZDgwcnNrbzAxMDMycXB0ZTI3dHNuZzMifQ.2Le6GSlbTKiUPYnvPylIog';
 
-            for ($i = 1; $i <= 4; $i++) {
-                $lat = $zona["latitud$i"];
-                $lng = $zona["longitud$i"];
-                if (is_numeric($lat) && is_numeric($lng)) {
-                    $coordenadas[] = [$lng, $lat]; 
+        // --- PRUEBA DE MAPA FORZADO (TEMPORAL) ---
+        // Vamos a intentar generar un mapa para una ubicación conocida y funcional.
+        // Latitud y Longitud de un punto en Saquisilí, Cotopaxi, Ecuador
+        $testLat = -0.8359;
+        $testLng = -78.6738;
+        $testZonaId = 9999; // ID ficticio para la prueba
+
+        Log::info("--- INICIANDO PRUEBA DE MAPA FORZADO ---");
+        Log::info("  Coordenadas de prueba: Lat={$testLat}, Lng={$testLng}");
+
+        $mapaBase64Test = null;
+        $mapboxUrlTest = "https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/{$testLng},{$testLat},14,0,0/300x300?access_token={$mapboxToken}";
+        Log::info('  URL de Mapbox de prueba: ' . $mapboxUrlTest);
+
+        try {
+            $responseTest = Http::timeout(20)->get($mapboxUrlTest); // Aumentamos el timeout por seguridad
+
+            if ($responseTest->successful()) {
+                if ($responseTest->header('Content-Type') === 'image/png') {
+                    $mapaBase64Test = 'data:image/png;base64,' . base64_encode($responseTest->body());
+                    Log::info('  Mapa de prueba OBTENIDO EXITOSAMENTE y convertido a Base64.');
                 } else {
-                    Log::warning("Coordenada {$i} para zona ID " . $zona->id . " no es numérica: Lat: {$lat}, Lng: {$lng}");
-                }
-            }
-
-            if (count($coordenadas) >= 3) {
-                Log::info('Coordenadas para polígono zona ' . $zona->id . ': ' . json_encode($coordenadas));
-
-                $avgLat = array_sum(array_column($coordenadas, 1)) / count($coordenadas);
-                $avgLng = array_sum(array_column($coordenadas, 0)) / count($coordenadas);
-
-                $polygonCoords = implode(",", array_map(function ($coord) {
-                    return implode(" ", $coord);
-                }, array_merge($coordenadas, [$coordenadas[0]]))); 
-
-                $overlay = "path-5+f44-0.5(" . $polygonCoords . ")";
-
-                $mapboxToken = env('MAPBOX_TOKEN');
-                if (empty($mapboxToken)) {
-                    Log::error("MAPBOX_TOKEN no está configurado en el archivo .env o está vacío.");
-                    $mapaBase64 = null;
-                } else {
-                    $mapboxUrl = "https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/{$overlay}/{$avgLng},{$avgLat},15/500x300?access_token={$mapboxToken}";
-
-                    
-                    Log::info('URL de Mapbox para zona ' . $zona->id . ': ' . $mapboxUrl);
-
-                    try {
-                        $response = Http::timeout(15)->get($mapboxUrl); 
-
-                        if ($response->successful()) { 
-                            if ($response->header('Content-Type') === 'image/png') {
-                                $mapaBase64 = 'data:image/png;base64,' . base64_encode($response->body());
-                                Log::info('Mapa generado exitosamente para zona ' . $zona->id);
-                            } else {
-                                Log::warning("Mapbox API no devolvió una imagen PNG para zona " . $zona->id . ". Content-Type: " . $response->header('Content-Type') . ". Respuesta: " . $response->body());
-                                $mapaBase64 = null;
-                            }
-                        } else {
-                            Log::error("Error en la respuesta de Mapbox API para zona " . $zona->id . ". Status: " . $response->status() . ". Cuerpo: " . $response->body());
-                            $mapaBase64 = null;
-                        }
-                    } catch (\Exception $e) {
-                        Log::error("Excepción al obtener mapa de Mapbox para zona " . $zona->id . ": " . $e->getMessage());
-                        $mapaBase64 = null;
-                    }
+                    Log::warning("  Mapbox API de prueba NO devolvió una imagen PNG. Content-Type: " . $responseTest->header('Content-Type') . ". Cuerpo (primeros 200 chars): " . substr($responseTest->body(), 0, 200));
                 }
             } else {
-                Log::warning('Zona ID ' . $zona->id . ' no tiene suficientes coordenadas válidas para formar un polígono (necesita al menos 3). Coordenadas encontradas: ' . count($coordenadas));
-                $mapaBase64 = null;
+                Log::error("  ERROR en la respuesta de Mapbox de prueba. Status: " . $responseTest->status() . ". Cuerpo: " . $responseTest->body());
+            }
+        } catch (\Exception $e) {
+            Log::error("  EXCEPCIÓN al conectar con Mapbox para mapa de prueba: " . $e->getMessage());
+        }
+        Log::info("--- FIN PRUEBA DE MAPA FORZADO ---");
+
+        // Añadimos esta zona de prueba al principio de la colección
+        // Esto te permitirá ver si al menos el mapa de prueba aparece.
+        $zonaTest = new \App\Models\ZonasRiesgo();
+        $zonaTest->id = $testZonaId;
+        $zonaTest->nombre = "Zona de Prueba (Saquisilí)";
+        $zonaTest->descripcion = "Este es un mapa de prueba para depuración.";
+        $zonaTest->nivelRiesgo = "Alto";
+        // Las demás propiedades no son necesarias para esta prueba
+        $zonasConMapas[] = [
+            'zona' => $zonaTest,
+            'mapa_base64' => $mapaBase64Test,
+        ];
+        // --- FIN PRUEBA DE MAPA FORZADO ---
+
+
+        foreach ($zonas as $zona) {
+            $mapaBase64 = null;
+            $lat = $zona->latitud1; // Tomamos la primera latitud
+            $lng = $zona->longitud1; // Tomamos la primera longitud
+
+            Log::info('--- Procesando Zona de Riesgo REAL ID: ' . $zona->id . ' - Nombre: ' . $zona->nombre . ' ---');
+            Log::info("  Valores leídos de DB: latitud1='{$lat}', longitud1='{$lng}'");
+
+
+            if (is_numeric($lat) && is_numeric($lng) && $lat !== '' && $lng !== '') {
+                $zoom = 14;
+                $size = "300x300";
+
+                $mapboxUrl = "https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/{$lng},{$lat},{$zoom},0,0/{$size}?access_token={$mapboxToken}";
+                Log::info('  URL de Mapbox para zona REAL ' . $zona->id . ': ' . $mapboxUrl);
+
+                try {
+                    $response = Http::timeout(15)->get($mapboxUrl);
+
+                    if ($response->successful()) {
+                        if ($response->header('Content-Type') === 'image/png') {
+                            $mapaBase64 = 'data:image/png;base64,' . base64_encode($response->body());
+                            Log::info('  Mapa de Mapbox REAL obtenido y convertido a Base64 para Zona ID ' . $zona->id);
+                        } else {
+                            Log::warning("  Mapbox API REAL NO devolvió una imagen PNG para Zona ID " . $zona->id . ". Content-Type: " . $response->header('Content-Type') . ". Cuerpo (primeros 200 chars): " . substr($response->body(), 0, 200));
+                        }
+                    } else {
+                        Log::error("  ERROR en la respuesta de Mapbox REAL para Zona ID " . $zona->id . ". Status: " . $response->status() . ". Cuerpo: " . $response->body());
+                    }
+                } catch (\Exception $e) {
+                    Log::error("  EXCEPCIÓN al conectar con Mapbox para Zona REAL ID " . $zona->id . ": " . $e->getMessage());
+                }
+            } else {
+                Log::warning('  Primera coordenada (latitud1, longitud1) NO VÁLIDA o vacía para Zona REAL ID ' . $zona->id . '. No se generará mapa para esta zona.');
             }
 
             $zonasConMapas[] = [
@@ -111,39 +133,39 @@ class ControllerZonasRiesgos extends Controller
             ];
         }
 
-        // ... (resto de tu código para generar QR y PDF) ...
-        $qrData = 'https://ejemplo.com/reporte';
+        return $this->generarPdfConQr($zonasConMapas);
+    }
 
+    /**
+     * Helper privado para generar el PDF y el QR, manteniendo el código DRY.
+     */
+    private function generarPdfConQr($zonasConMapas)
+    {
+        $qrDataGeneral = url('/zonas-riesgo'); // Asegúrate de que esta ruta existe
+
+        $qrBase64General = null;
         try {
-            $qr = Builder::create()
+            $qrBuilder = Builder::create()
                 ->writer(new PngWriter())
-                ->data($qrData)
+                ->data($qrDataGeneral)
                 ->encoding(new Encoding('UTF-8'))
-                ->size(100)
+                ->size(150)
                 ->margin(10)
                 ->build();
 
-            $qrBase64 = 'data:image/png;base64,' . base64_encode($qr->getString());
-
+            $qrBase64General = 'data:image/png;base64,' . base64_encode($qrBuilder->getString());
+            Log::info('QR General del Reporte generado exitosamente con la URL: ' . $qrDataGeneral);
         } catch (\Exception $e) {
-            Log::error("Error al generar el QR para el reporte: " . $e->getMessage());
-            $qrBase64 = null;
+            Log::error('ERROR al generar el QR General del Reporte: ' . $e->getMessage());
         }
-        // --- FIN: Generación del Código QR ---
 
-        // Cargar la vista
         $pdf = Pdf::loadView('zonasR.reporte', [
             'zonasConMapas' => $zonasConMapas,
-            'qrBase64' => $qrBase64,
+            'qrBase64General' => $qrBase64General, // Pasar como qrBase64General
         ]);
 
         return $pdf->download('reporte-zonas.pdf');
     }
-
-
-    // ... el resto de tu controlador sigue igual ...
-    // La función getBase64FromUrl sigue comentada, lo cual está bien.
-
     /**
      * Show the form for creating a new resource.
      */
@@ -152,7 +174,6 @@ class ControllerZonasRiesgos extends Controller
         if (session('tipo') !== 'Administrador') {
             return redirect('/')->with('error', 'Acceso no autorizado.');
         }
-        //Vista para crear nuevo punto de riesgo
         return view('zonasR.nuevaZona');
     }
 
@@ -164,7 +185,6 @@ class ControllerZonasRiesgos extends Controller
         if (session('tipo') !== 'Administrador') {
             return redirect('/')->with('error', 'Acceso no autorizado.');
         }
-        //Guardar los datos en la bdd
         try {
             $datos = [
                 'nombre' => $request->nombre,
@@ -204,7 +224,6 @@ class ControllerZonasRiesgos extends Controller
         if (session('tipo') !== 'Administrador') {
             return redirect('/')->with('error', 'Acceso no autorizado.');
         }
-        //Vista para editar
         $zona = ZonasRiesgo::findOrFail($id);
         return view('zonasR.editar', compact('zona'));
     }
@@ -217,7 +236,6 @@ class ControllerZonasRiesgos extends Controller
         if (session('tipo') !== 'Administrador') {
             return redirect('/')->with('error', 'Acceso no autorizado.');
         }
-        //Actualizar los datos que mandamos para editar
         try {
             $zona = ZonasRiesgo::findOrFail($id);
             $zona->update([
@@ -250,11 +268,9 @@ class ControllerZonasRiesgos extends Controller
         if (session('tipo') !== 'Administrador') {
             return redirect('/')->with('error', 'Acceso no autorizado.');
         }
-        //Eliminar
         try {
             $zona = ZonasRiesgo::findOrFail($id);
             $zona->delete();
-
             return redirect()->route('zonasR.index')->with('mensaje', 'Zona eliminada correctamente.');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Hubo un error al eliminar la zona de riesgo: ' . $e->getMessage());

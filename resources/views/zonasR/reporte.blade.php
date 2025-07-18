@@ -73,6 +73,15 @@
         @endforeach
     </tbody>
 </table>
+<div style="text-align: center; margin 20px o;">
+            qr identificador para zonas de Riesgo
+        @if ($qrBase64)
+            <img src="{{ $qrBase64 }}" alt="Código QR" class="qr-img" />
+        @else
+            <p style="text-align: center;">[QR no disponible]</p>
+        @endif
+
+    </div>
 
 </body>
 </html>

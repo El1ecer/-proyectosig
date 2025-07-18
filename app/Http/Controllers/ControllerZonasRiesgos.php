@@ -10,8 +10,6 @@ use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Encoding\Encoding;
 use Endroid\QrCode\Writer\PngWriter;
 use Illuminate\Support\Facades\Log;
-
-// Agrega estas si las necesitas para el QR, aunque no las uses todas en este ejemplo
 use Endroid\QrCode\ErrorCorrectionLevel\ErrorCorrectionLevelHigh;
 use Endroid\QrCode\Label\Alignment\LabelAlignmentCenter;
 use Endroid\QrCode\Label\Font\NotoSans;
@@ -48,60 +46,52 @@ class ControllerZonasRiesgos extends Controller
         foreach ($zonas as $zona) {
             $coordenadas = [];
 
-            // Log: Mostrar las coordenadas de cada zona antes de procesar
             Log::info('Procesando zona ID: ' . $zona->id . ' Nombre: ' . $zona->nombre);
 
             for ($i = 1; $i <= 4; $i++) {
                 $lat = $zona["latitud$i"];
                 $lng = $zona["longitud$i"];
                 if (is_numeric($lat) && is_numeric($lng)) {
-                    $coordenadas[] = [$lng, $lat]; // lng, lat (¡orden importante para Mapbox!)
+                    $coordenadas[] = [$lng, $lat]; 
                 } else {
                     Log::warning("Coordenada {$i} para zona ID " . $zona->id . " no es numérica: Lat: {$lat}, Lng: {$lng}");
                 }
             }
 
             if (count($coordenadas) >= 3) {
-                // Log: Coordenadas válidas para polígono
                 Log::info('Coordenadas para polígono zona ' . $zona->id . ': ' . json_encode($coordenadas));
 
-                // Calcular centro del mapa
                 $avgLat = array_sum(array_column($coordenadas, 1)) / count($coordenadas);
                 $avgLng = array_sum(array_column($coordenadas, 0)) / count($coordenadas);
 
-                // Preparar el overlay para el polígono
                 $polygonCoords = implode(",", array_map(function ($coord) {
                     return implode(" ", $coord);
-                }, array_merge($coordenadas, [$coordenadas[0]]))); // cerrar el polígono
+                }, array_merge($coordenadas, [$coordenadas[0]]))); 
 
                 $overlay = "path-5+f44-0.5(" . $polygonCoords . ")";
 
-                // URL de Mapbox
                 $mapboxToken = env('MAPBOX_TOKEN');
-                // Log: Verificar si el token está presente
                 if (empty($mapboxToken)) {
                     Log::error("MAPBOX_TOKEN no está configurado en el archivo .env o está vacío.");
                     $mapaBase64 = null;
                 } else {
                     $mapboxUrl = "https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/{$overlay}/{$avgLng},{$avgLat},15/500x300?access_token={$mapboxToken}";
 
-                    // Log: URL completa de Mapbox
+                    
                     Log::info('URL de Mapbox para zona ' . $zona->id . ': ' . $mapboxUrl);
 
                     try {
-                        $response = Http::timeout(15)->get($mapboxUrl); // Aumentar el timeout por si acaso
+                        $response = Http::timeout(15)->get($mapboxUrl); 
 
-                        if ($response->successful()) { // Verifica códigos 2xx
+                        if ($response->successful()) { 
                             if ($response->header('Content-Type') === 'image/png') {
                                 $mapaBase64 = 'data:image/png;base64,' . base64_encode($response->body());
                                 Log::info('Mapa generado exitosamente para zona ' . $zona->id);
                             } else {
-                                // Log: Contenido de la respuesta si no es PNG
                                 Log::warning("Mapbox API no devolvió una imagen PNG para zona " . $zona->id . ". Content-Type: " . $response->header('Content-Type') . ". Respuesta: " . $response->body());
                                 $mapaBase64 = null;
                             }
                         } else {
-                            // Log: Error en la respuesta de la API de Mapbox (ej. 401, 403, 404)
                             Log::error("Error en la respuesta de Mapbox API para zona " . $zona->id . ". Status: " . $response->status() . ". Cuerpo: " . $response->body());
                             $mapaBase64 = null;
                         }

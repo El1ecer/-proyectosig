@@ -44,7 +44,7 @@
             @endforeach
         </tbody>
     </table>
-    <div style="text-align: center; margin 20px o;">
+    <div style="text-align: center; margin: 20px o;">
             qr identificador para zonas seguras
         @if ($qrBase64)
             <img src="{{ $qrBase64 }}" alt="Código QR" class="qr-img" />

@@ -7,6 +7,9 @@ use App\Models\ZonasRiesgo;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Http;
+use Endroid\QrCode\Builder\Builder;
+use Endroid\QrCode\Encoding\Encoding;
+use Endroid\QrCode\Writer\PngWriter;
 
 class ControllerZonasRiesgos extends Controller
 {

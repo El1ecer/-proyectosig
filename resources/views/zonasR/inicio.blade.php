@@ -1,15 +1,16 @@
 @extends('layout.app')
+
 @section('contenido')
 <br>
 <div class="container-fluid text-right">
     <div class="py-3 py-lg-0 px-lg-5">
-        <a href="{{ route('zonasR.reporte') }}" class="btn btn-danger" target="_blank">
+        <a href="#" class="btn btn-danger" id="btn-exportar-pdf">
             <i class="fa fa-file-pdf"></i> Exportar PDF
         </a>
-
         <a href="{{ route('zonasR.create') }}" class="btn btn-danger">Nueva zona de riesgo</a>
     </div>
 </div>
+
 <div class="container-fluid mt-4 overflow-hidden">
     <div class="py-3 py-lg-0 px-lg-5">
         @if($zonas->isNotEmpty())
@@ -32,63 +33,29 @@
                 <tbody class="table-bordered">
                     @foreach($zonas as $index => $zona)
                     <tr>
-                        <td>{{ $index + 1 }}</td>   
+                        <td>{{ $index + 1 }}</td>
                         <td>{{ $zona->nombre }}</td>
                         <td>{{ str($zona->descripcion)->limit(50) }}</td>
                         <td>{{ $zona->nivelRiesgo }}</td>
-                        <td>
-                            <div>
-                                <h5 style="color: #2878EB">Latitud:</h5>
-                                {{ $zona->latitud1 }}
-                                <h5 style="color: #2878EB">Longitud:</h5>
-                                {{ $zona->longitud1 }}
-                            </div>
-                        </td>
-                        <td>
-                            <div>
-                                <h5 style="color: #2878EB">Latitud:</h5>
-                                {{ $zona->latitud2 }}
-                                <h5 style="color: #2878EB">Longitud:</h5>
-                                {{ $zona->longitud2 }}
-                            </div>
-                        </td>
-                        <td>
-                            <div>
-                                <h5 style="color: #2878EB">Latitud:</h5>
-                                {{ $zona->latitud3 }}
-                                <h5 style="color: #2878EB">Longitud:</h5>
-                                {{ $zona->longitud3 }}
-                            </div>
-                        </td>
-                        <td>
-                            <div>
-                                <h5 style="color: #2878EB">Latitud:</h5>
-                                {{ $zona->latitud4 }}
-                                <h5 style="color: #2878EB">Longitud:</h5>
-                                {{ $zona->longitud4 }}
-                            </div>
-                        </td>
-                        <td>
-                            <div>
-                                <h5 style="color: #2878EB">Latitud:</h5>
-                                {{ $zona->latitud5 }}
-                                <h5 style="color: #2878EB">Longitud:</h5>
-                                {{ $zona->longitud5 }}
-                            </div>
-                        </td>
+                        @for ($i = 1; $i <= 5; $i++)
+                            <td>
+                                <div>
+                                    <h5 style="color: #2878EB">Latitud:</h5> {{ $zona["latitud$i"] }}
+                                    <h5 style="color: #2878EB">Longitud:</h5> {{ $zona["longitud$i"] }}
+                                </div>
+                            </td>
+                        @endfor
                         <td class="text-center">
-                            <div>
-                                <a href="{{ route('zonasR.edit', $zona->id) }}" class="btn btn-sm btn-warning btn-pencil">
-                                    <i class="fa-solid fa-pen-to-square"></i>
-                                </a>
-                            </div><br>
-                            <div>
-                                <form class="form-eliminar" action="{{ route('zonasR.destroy', $zona->id) }}" method="POST" class="d-inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-danger"><i class="fa-solid fa-trash"></i></button>
-                                </form>
-                            </div>
+                            <a href="{{ route('zonasR.edit', $zona->id) }}" class="btn btn-sm btn-warning btn-pencil" title="Editar">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </a>
+                            <form class="form-eliminar d-inline" action="{{ route('zonasR.destroy', $zona->id) }}" method="POST">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-danger" title="Eliminar">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </form>
                         </td>
                     </tr>
                     @endforeach
@@ -96,38 +63,83 @@
             </table>
         </div>
         @else
-            <p class="text-muted">No hay zonas de riesgo registradas.</p>
+        <p class="text-muted">No hay zonas de riesgo registradas.</p>
         @endif
     </div>
 </div>
 <br>
+@endsection
+
+@section('scripts')
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+
+<!-- DataTables y Bootstrap 5 -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<!-- PDFMake -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/vfs_fonts.js"></script>
 
 <script>
-    document.querySelectorAll('.form-eliminar').forEach(form => {
-        form.addEventListener('submit', function(e) {
-            e.preventDefault(); //Detiene el envio para hacer la confirmacion
+    // Inicializar DataTable
+    $(document).ready(function () {
+        $('#tblZonaR').DataTable({
+            responsive: true,
+            language: {
+                url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
+            }
+        });
 
-            //Se esta sacando el nombre del registro a eliminar, si no lo encuentra lo deja como "esta zona"
-            const zonaNombre = this.closest('tr')?.querySelector('td:nth-child(2)')?.innerText ?? 'esta zona';
+        // Confirmación de eliminación con SweetAlert
+        document.querySelectorAll('.form-eliminar').forEach(form => {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const zonaNombre = this.closest('tr')?.querySelector('td:nth-child(2)')?.innerText ?? 'esta zona';
 
-            Swal.fire({
-                title: '¿Estás seguro?',
-                text: `Vas a eliminar ${zonaNombre}. Esta acción no se puede deshacer.`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Sí, eliminar',
-                cancelButtonText: 'Cancelar',
-                reverseButtons: true
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    this.submit();
-                }
+                Swal.fire({
+                    title: '¿Estás seguro?',
+                    text: `Vas a eliminar ${zonaNombre}. Esta acción no se puede deshacer.`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        this.submit();
+                    }
+                });
             });
         });
     });
-</script>
 
-<script>
+    // Función para obtener imágenes como base64
+    function getBase64ImageFromURL(url) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.onload = function () {
+                const canvas = document.createElement("canvas");
+                canvas.width = this.width;
+                canvas.height = this.height;
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(this, 0, 0);
+                resolve(canvas.toDataURL("image/png"));
+            };
+            img.onerror = function () {
+                reject("No se pudo cargar la imagen");
+            };
+            img.src = url;
+        });
+    }
+
+    // Función exportar PDF
     document.getElementById("btn-exportar-pdf").addEventListener("click", async function () {
         const rows = Array.from(document.querySelectorAll("#tblZonaR tbody tr"));
         const qrUrl = 'https://quickchart.io/qr?text={{ urlencode(url('/mapaR')) }}&size=150';
@@ -157,7 +169,6 @@
 
         for (const row of rows) {
             const cells = row.querySelectorAll("td");
-
             const nombre = cells[1].innerText.trim();
             const descripcion = cells[2].innerText.trim();
             const riesgo = cells[3].innerText.trim();
@@ -173,7 +184,6 @@
 
             const centerLat = (coords.reduce((s, c) => s + c.lat, 0) / coords.length).toFixed(5);
             const centerLng = (coords.reduce((s, c) => s + c.lng, 0) / coords.length).toFixed(5);
-
             const markers = coords.map((c, i) => `pin-s-${String.fromCharCode(97 + i)}+f00(${c.lng},${c.lat})`).join(",");
             const mapUrl = `https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/${markers}/${centerLng},${centerLat},15/400x200?access_token=${MAPBOX_TOKEN}`;
             const mapImage = await getBase64ImageFromURL(mapUrl).catch(() => null);
@@ -187,17 +197,16 @@
             ]);
         }
 
-        content.push({
-            table: {
-                widths: ['auto', 'auto', '*', 'auto', 200],
-                body: body
-            }
-        });
-
         const docDefinition = {
             content: [
                 { text: 'Reporte de Zonas de Riesgo', style: 'header', alignment: 'center', margin: [0, 0, 0, 10] },
-                ...content
+                ...content,
+                {
+                    table: {
+                        widths: ['auto', 'auto', '*', 'auto', 200],
+                        body: body
+                    }
+                }
             ],
             styles: {
                 header: { fontSize: 18, bold: true },
@@ -208,25 +217,5 @@
 
         pdfMake.createPdf(docDefinition).download('zonas_riesgo.pdf');
     });
-
-    function getBase64ImageFromURL(url) {
-        return new Promise((resolve, reject) => {
-            const img = new Image();
-            img.crossOrigin = "anonymous";
-            img.onload = function () {
-                const canvas = document.createElement("canvas");
-                canvas.width = this.width;
-                canvas.height = this.height;
-                const ctx = canvas.getContext("2d");
-                ctx.drawImage(this, 0, 0);
-                resolve(canvas.toDataURL("image/png"));
-            };
-            img.onerror = function () {
-                reject("No se pudo cargar la imagen");
-            };
-            img.src = url;
-        });
-    }
 </script>
-
 @endsection

@@ -29,7 +29,7 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: "./" 
-          server-dir: "/sigjjj3.infinityfreeapp.com/htdocs/"
+          server-dir: "/zonasigxd.infinityfreeapp.com/htdocs/"
           exclude: |
             **/.git*
             **/node_modules/**

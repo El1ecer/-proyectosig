@@ -5,11 +5,11 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\ZonasRiesgo;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Http;
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Encoding\Encoding;
 use Endroid\QrCode\Writer\PngWriter;
+use Illuminate\Support\Facades\Log; // Asegúrate de que esto está importado
 
 class ControllerZonasRiesgos extends Controller
 {
@@ -22,124 +22,210 @@ class ControllerZonasRiesgos extends Controller
             return redirect('/')->with('error', 'Acceso no autorizado.');
         }
         //Pagina principal
-        $zonas=ZonasRiesgo::all();
+        $zonas = ZonasRiesgo::all();
         return view('zonasR.inicio', compact('zonas'));
     }
 
-    public function mapa(){
+    public function mapa()
+    {
         //Pagina principal
-        $zonas=ZonasRiesgo::all();
+        $zonas = ZonasRiesgo::all();
         return view('zonasR.mapa', compact('zonas'));
     }
     // pk.eyJ1IjoidmludGFpbHN6IiwiYSI6ImNtY3MzajdkMTB0MngyanEyc2o5bjAwOHEifQ.FkEeSTHc8LB9ws0_jaQ6FA
 
-    public function exportarPDF()
+   public function exportarPDF()
     {
         $zonas = ZonasRiesgo::all();
+        $zonasConMapas = [];
+
+        // Tu token de Mapbox (reconfírmalo de tu cuenta)
+        // Este token debe tener acceso a Mapbox Static Images API.
+        $mapboxToken = 'pk.eyJ1IjoiZWxpby0xIiwiYSI6ImNtZDgwcnNrbzAxMDMycXB0ZTI3dHNuZzMifQ.2Le6GSlbTKiUPYnvPylIog'; 
 
         foreach ($zonas as $zona) {
-            $markers = [];
-            $coordenadas = [];
+            $validMarkers = []; // Almacena los strings de los marcadores "pin-s+color(long,lat)"
+            $validCoordinatesForPoly = []; // Almacena [longitud, latitud] para construir el polígono y centrar el mapa
 
-            if ($zona->latitud1 && $zona->longitud1) {
-                $markers[] = "pin-s+ff0000({$zona->longitud1},{$zona->latitud1})";
-                $coordenadas[] = [$zona->longitud1, $zona->latitud1];
-            }
-            if ($zona->latitud2 && $zona->longitud2) {
-                $markers[] = "pin-s+00ff00({$zona->longitud2},{$zona->latitud2})";
-                $coordenadas[] = [$zona->longitud2, $zona->latitud2];
-            }
-            if ($zona->latitud3 && $zona->longitud3) {
-                $markers[] = "pin-s+0000ff({$zona->longitud3},{$zona->latitud3})";
-                $coordenadas[] = [$zona->longitud3, $zona->latitud3];
-            }
-            if ($zona->latitud4 && $zona->longitud4) {
-                $markers[] = "pin-s+ffff00({$zona->longitud4},{$zona->latitud4})";
-                $coordenadas[] = [$zona->longitud4, $zona->latitud4];
-            }
-            if ($zona->latitud5 && $zona->longitud5) {
-                $markers[] = "pin-s+00ffff({$zona->longitud5},{$zona->latitud5})";
-                $coordenadas[] = [$zona->longitud5, $zona->latitud5];
-            }
+            // Iterar sobre las 5 posibles coordenadas
+            for ($i = 1; $i <= 5; $i++) {
+                $lat = $zona->{"latitud" . $i};
+                $lng = $zona->{"longitud" . $i};
 
-            // Si hay más de un punto, cerrar el polígono para la línea
-            if(count($coordenadas) > 1){
-                $coordenadas[] = $coordenadas[0]; // opcional para cerrar la línea en forma de polígono
+                // Validar que las coordenadas existan y sean numéricas válidas
+                if (is_numeric($lat) && is_numeric($lng) && $lat >= -90 && $lat <= 90 && $lng >= -180 && $lng <= 180) {
+                    // Generar un color diferente para cada marcador si lo deseas, o usa uno fijo
+                    $markerColor = match($i) {
+                        1 => 'ff0000', // Rojo
+                        2 => '00ff00', // Verde
+                        3 => '0000ff', // Azul
+                        4 => 'ffff00', // Amarillo
+                        5 => '00ffff', // Cyan
+                        default => 'aaaaaa' // Gris por defecto
+                    };
+                    $validMarkers[] = "pin-s+{$markerColor}({$lng},{$lat})";
+                    $validCoordinatesForPoly[] = [(float)$lng, (float)$lat];
+                } else {
+                    Log::info("Zona '{$zona->nombre}': Coordenadas lat{$i}/long{$i} inválidas o vacías: Lat={$lat}, Lng={$lng}");
+                }
             }
 
-            // Construir path para la línea: "lng lat;lng lat;..."
-            $pathCoords = collect($coordenadas)
-                ->map(fn($c) => $c[0] . ' ' . $c[1])
-                ->implode(';');
+            $polygonPath = null;
+            // Solo intentar dibujar un polígono si hay al menos 3 puntos válidos
+            if (count($validCoordinatesForPoly) >= 3) {
+                // Cerrar el polígono añadiendo el primer punto al final
+                $closedPolygonCoords = $validCoordinatesForPoly;
+                $closedPolygonCoords[] = $closedPolygonCoords[0]; 
+                
+                $pathCoordsString = collect($closedPolygonCoords)
+                    ->map(fn($c) => implode(',', $c))
+                    ->implode(',');
 
-            // Definir path con ancho 3px, borde negro, sin relleno transparente
-            $path = "path-3+000000-00000000($pathCoords)";
+                $fillColor = match($zona->nivelRiesgo) {
+                    'Alto' => 'ff000080', // Rojo con 50% de transparencia (hex #RRGGBBAA)
+                    'Medio' => 'ffff0080', // Amarillo con 50% de transparencia
+                    default => '0476D980' // Azul con 50% de transparencia
+                };
 
-            // Unir marcadores y path separados por coma
-            $overlays = implode(',', $markers);
-            if ($pathCoords) {
-                $overlays .= ',' . $path;
+                // path-{stroke_width}+{stroke_color}+{fill_color}(polyline_encoded_coordinates)
+                // Usamos un grosor de línea de 3, color de borde negro y color de relleno con transparencia
+                $polygonPath = "path-3+000000+" . $fillColor . "({$pathCoordsString})";
+                Log::info("Zona '{$zona->nombre}': Polígono generado: " . $polygonPath);
+
+            } else {
+                Log::info("Zona '{$zona->nombre}': No hay suficientes coordenadas (menos de 3) para dibujar un polígono.");
             }
 
-            // Calcular centro
-            $centerLng = collect($coordenadas)->pluck(0)->avg() ?? -78.6;
-            $centerLat = collect($coordenadas)->pluck(1)->avg() ?? -0.92;
+            // Combinar marcadores y polígono en un solo string para la URL de Mapbox
+            $overlays = implode(',', $validMarkers);
+            if ($polygonPath) {
+                if (!empty($overlays)) {
+                    $overlays .= ',' . $polygonPath;
+                } else {
+                    $overlays = $polygonPath; // El polígono es el único overlay
+                }
+            }
+            
+            // Calcular el centro del mapa
+            $centerLng = -78.6; // Coordenadas predeterminadas (ej. Ecuador central)
+            $centerLat = -0.92;
 
-            $zoom = 13;
-            $width = 400;
-            $height = 200;
-            $token = 'pk.eyJ1IjoidmludGFpbHN6IiwiYSI6ImNtY3MzajdkMTB0MngyanEyc2o5bjAwOHEifQ.FkEeSTHc8LB9ws0_jaQ6FA';
+            if (!empty($validCoordinatesForPoly)) {
+                // Calcular el promedio de las coordenadas válidas para centrar el mapa
+                // Asegúrate de que los valores sean float antes de promediar
+                $centerLng = collect($validCoordinatesForPoly)->pluck(0)->avg();
+                $centerLat = collect($validCoordinatesForPoly)->pluck(1)->avg();
+                Log::info("Zona '{$zona->nombre}': Centro calculado: {$centerLng},{$centerLat}");
+            } else {
+                Log::info("Zona '{$zona->nombre}': Usando centro predeterminado.");
+            }
+            
+            $zoom = 14; // Nivel de zoom predeterminado
+            $width = 400; // Ancho de la imagen del mapa
+            $height = 200; // Alto de la imagen del mapa
 
-            $mapUrl = "https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/$overlays/$centerLng,$centerLat,$zoom/{$width}x{$height}?access_token=$token";
+            // Construir la URL de Mapbox Static Images
+            $mapUrl = "https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/";
+            if (!empty($overlays)) {
+                $mapUrl .= "{$overlays}/";
+            }
+            $mapUrl .= "{$centerLng},{$centerLat},{$zoom}/{$width}x{$height}?access_token={$mapboxToken}";
 
+            // === INICIO DEPURACIÓN Y SOLUCIÓN DE PROBLEMAS DEL MAPA ===
+            Log::info("DEBUG: Mapbox URL final para zona '{$zona->nombre}': " . $mapUrl);
+            
+            $mapaBase64 = null;
             try {
-                $response = Http::timeout(10)->get($mapUrl);
+                // Aumentar el tiempo de espera a 30 segundos para redes lentas o respuestas grandes
+                $response = Http::timeout(30)->get($mapUrl); 
+
+                Log::info("DEBUG: Respuesta de Mapbox para '{$zona->nombre}' - Status: " . $response->status());
+                $contentType = $response->header('Content-Type');
+                Log::info("DEBUG: Respuesta de Mapbox para '{$zona->nombre}' - Content-Type: " . $contentType);
 
                 if ($response->successful()) {
-                    $base64 = 'data:image/png;base64,' . base64_encode($response->body());
-                    $zona->mapa_base64 = $base64; // temporal para la vista PDF
+                    // Es crucial que Mapbox devuelva una imagen PNG.
+                    if (strpos($contentType, 'image/png') !== false) {
+                        $mapaBase64 = 'data:image/png;base64,' . base64_encode($response->body());
+                        Log::info("DEBUG: Mapa Base64 generado exitosamente para '{$zona->nombre}'.");
+                    } else {
+                        // Si no es una imagen PNG, algo está mal en la URL o el token/permisos.
+                        Log::warning("ADVERTENCIA: Mapbox NO devolvió una imagen PNG para '{$zona->nombre}'. Content-Type: {$contentType}. Body (primeros 500 chars): " . substr($response->body(), 0, 500));
+                        $mapaBase64 = null; // No disponible
+                    }
                 } else {
-                    $zona->mapa_base64 = null;
+                    // Si la respuesta no es exitosa (ej. 4xx, 5xx), muestra el mensaje de error de Mapbox.
+                    Log::error("ERROR: Falló la carga del mapa para '{$zona->nombre}'. URL: {$mapUrl}. Status: {$response->status()}. Respuesta de error de Mapbox: " . $response->body());
+                    $mapaBase64 = null; // No disponible
                 }
+            } catch (\Illuminate\Http\Client\ConnectionException $e) {
+                // Error específico de conexión (timeout, no se puede conectar al host, DNS)
+                Log::error("ERROR: Error de conexión al generar mapa para '{$zona->nombre}': " . $e->getMessage() . ". URL intentada: " . $mapUrl);
+                $mapaBase64 = null;
             } catch (\Exception $e) {
-                $zona->mapa_base64 = null;
+                // Cualquier otro error inesperado en el proceso de solicitud
+                Log::error('ERROR: Error general al generar mapa para ' . $zona->nombre . ': ' . $e->getMessage() . '. Archivo: ' . $e->getFile() . ' Línea: ' . $e->getLine());
+                $mapaBase64 = null;
             }
+            // === FIN DEPURACIÓN Y SOLUCIÓN DE PROBLEMAS DEL MAPA ===
+
+            $zonasConMapas[] = [
+                'zona' => $zona,
+                'mapa_base64' => $mapaBase64
+            ];
         }
 
-        $pdf = Pdf::loadView('zonasR.reporte', compact('zonas'));
+        // QR Base64
+        $qrContenido = 'https://tusitio.com/zonas-riesgo'; // Asegúrate de que esta URL sea real si el QR va a ser escaneado.
+        $qrCode = Builder::create()
+            ->writer(new PngWriter())
+            ->data($qrContenido)
+            ->encoding(new Encoding('UTF-8'))
+            ->size(250)
+            ->margin(15)
+            ->build();
+
+        $qrBase64 = 'data:image/png;base64,' . base64_encode($qrCode->getString());
+
+        // Generar PDF
+        $pdf = Pdf::loadView('zonasR.reporte', [
+            'zonasConMapas' => $zonasConMapas,
+            'qrBase64' => $qrBase64
+        ]);
+        
+        // Es crucial para que DomPDF pueda cargar imágenes desde URLs externas o Base64
+        $pdf->setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true]);
+        
         return $pdf->download('zonas_riesgo.pdf');
     }
-
-
-
-    private function getBase64FromUrl($url)
-    {
-        try {
-            // Configurar contexto para evitar errores SSL y permitir acceso remoto
-            $contextOptions = [
-                "ssl" => [
-                    "verify_peer" => false,
-                    "verify_peer_name" => false,
-                ],
-                "http" => [
-                    "header" => "User-Agent: Mozilla/5.0\r\n"
-                ]
-            ];
-
-            $context = stream_context_create($contextOptions);
-            $imageData = file_get_contents($url, false, $context);
-
-            if ($imageData === false) {
-                throw new \Exception("No se pudo obtener la imagen desde la URL.");
-            }
-
-            $mime = 'image/png'; // Asumimos que todas las imágenes de Mapbox son PNG
-            return 'data:' . $mime . ';base64,' . base64_encode($imageData);
-        } catch (\Exception $e) {
-            return null; // Puedes también loguear el error si lo necesitas
-        }
-    }
-
+    /**
+     * Esta función getBase64FromUrl ya no es necesaria si usas Http::get() de Laravel.
+     * La dejo comentada por si tenías alguna dependencia de ella en otro lado,
+     * pero para obtener las imágenes de Mapbox, Http::get() es más robusto y Laravel-friendly.
+     */
+    // private function getBase64FromUrl($url)
+    // {
+    //     try {
+    //         $contextOptions = [
+    //             "ssl" => [
+    //                 "verify_peer" => false,
+    //                 "verify_peer_name" => false,
+    //             ],
+    //             "http" => [
+    //                 "header" => "User-Agent: Mozilla/5.0\r\n"
+    //             ]
+    //         ];
+    //         $context = stream_context_create($contextOptions);
+    //         $imageData = file_get_contents($url, false, $context);
+    //         if ($imageData === false) {
+    //             throw new \Exception("No se pudo obtener la imagen desde la URL.");
+    //         }
+    //         $mime = 'image/png';
+    //         return 'data:' . $mime . ';base64,' . base64_encode($imageData);
+    //     } catch (\Exception $e) {
+    //         return null;
+    //     }
+    // }
 
     /**
      * Show the form for creating a new resource.
@@ -162,7 +248,7 @@ class ControllerZonasRiesgos extends Controller
             return redirect('/')->with('error', 'Acceso no autorizado.');
         }
         //Guardar los datos en la bdd
-        try{
+        try {
             $datos = [
                 'nombre' => $request->nombre,
                 'descripcion' => $request->descripcion,
@@ -180,8 +266,7 @@ class ControllerZonasRiesgos extends Controller
             ];
             ZonasRiesgo::create($datos);
             return redirect()->route('zonasR.index')->with('mensaje', 'Zona creada correctamente.');
-        }
-        catch (\Exception $e){
+        } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Hubo un error al guardar la zona de riesgo: ' . $e->getMessage());
         }
     }
@@ -216,7 +301,7 @@ class ControllerZonasRiesgos extends Controller
             return redirect('/')->with('error', 'Acceso no autorizado.');
         }
         //Actualizar los datos que mandamos para editar
-        try{
+        try {
             $zona = ZonasRiesgo::findOrFail($id);
             $zona->update([
                 'nombre' => $request->nombre,
@@ -234,11 +319,10 @@ class ControllerZonasRiesgos extends Controller
                 'longitud5' => $request->longitud5
             ]);
             return redirect()->route('zonasR.index')->with('mensaje', 'Zona actualizada correctamente.');
-        }
-        catch (\Exception $e){
+        } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Hubo un error al actualizar la zona de riesgo: ' . $e->getMessage());
         }
-        
+
     }
 
     /**
@@ -250,15 +334,14 @@ class ControllerZonasRiesgos extends Controller
             return redirect('/')->with('error', 'Acceso no autorizado.');
         }
         //Eliminar
-        try{
+        try {
             $zona = ZonasRiesgo::findOrFail($id);
             $zona->delete();
 
             return redirect()->route('zonasR.index')->with('mensaje', 'Zona eliminada correctamente.');
-        }
-        catch (\Exception $e){
+        } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Hubo un error al eliminar la zona de riesgo: ' . $e->getMessage());
         }
-        
+
     }
 }

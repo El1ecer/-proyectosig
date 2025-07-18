@@ -1,0 +1,38 @@
+name: Deploy to InfinityFree
+
+on:
+  push:
+    branches:
+      # Solo se desplegara desde la rama production ojo
+      - production
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v3
+
+      - name: 📦 Install Composer dependencies
+        run: composer install --no-dev --optimize-autoloader
+
+      - name: 🔧 Optimize Laravel
+        run: |
+          php artisan config:cache
+          php artisan route:cache
+          php artisan view:cache
+
+      - name: Deploy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FPT_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: "./" 
+          server-dir: "/sigjjj3.infinityfreeapp.com/htdocs/"
+          exclude: |
+            **/.git*
+            **/node_modules/**
+            **/tests/**
+            **/.github/**
+            README.md
